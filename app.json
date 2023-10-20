@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "Smart Calendar",
+    "slug": "Smart_Calendar",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "notification":{
+      "icon":"./assets/icon.png"
+    },
+    "splash": {
+      "image": "./assets/modalimage.png",
+      "resizeMode":"cover",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCalendarsUsageDescription": "This permission is not needed by the app, but it is required by an underlying API. If you see this dialog, contact us.",
+        "NSCameraUsageDescription": "This permission is not needed by the app, but it is required by an underlying API. If you see this dialog, contact us.",
+        "NSContactsUsageDescription": "This permission is not needed by the app, but it is required by an underlying API. If you see this dialog, contact us.",
+        "NSLocationWhenInUseUsageDescription": "This permission is not needed by the app, but it is required by an underlying API. If you see this dialog, contact us.",
+        "NSMicrophoneUsageDescription": "This permission is not needed by the app, but it is required by an underlying API. If you see this dialog, contact us.",
+        "NSMotionUsageDescription": "This permission is not needed by the app, but it is required by an underlying API. If you see this dialog, contact us.",
+        "NSPhotoLibraryAddUsageDescription": "This permission is not needed by the app, but it is required by an underlying API. If you see this dialog, contact us.",
+        "NSPhotoLibraryUsageDescription": "This permission is not needed by the app, but it is required by an underlying API. If you see this dialog, contact us.",
+        "NSRemindersUsageDescription": "This permission is not needed by the app, but it is required by an underlying API. If you see this dialog, contact us."
+    },
+      "icon": "./assets/icon.png",
+      "userInterfaceStyle": "light"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "android": {
+      "package": "com.khangal.SmartCalendar",
+      "versionCode":2,
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi":true,
+      "icon": "./assets/icon.png",
+      "userInterfaceStyle": "light"
+    }
+    
+    
+  }
+}

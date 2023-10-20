@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "559197822213",
+    "project_id": "smartcalendar-f4b83",
+    "storage_bucket": "smartcalendar-f4b83.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:559197822213:android:ed9aafd6d7bc0708a12b6c",
+        "android_client_info": {
+          "package_name": "com.khangal.SmartCalendar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "559197822213-d9e7bo1d2oh3ta8a14pvqlm6mv15g8n7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHRsd3kvT4NSzEqvb5qqqkcQXX-E8oboA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "559197822213-d9e7bo1d2oh3ta8a14pvqlm6mv15g8n7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
