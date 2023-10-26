@@ -8,7 +8,7 @@ import * as SQLite from 'expo-sqlite'
 import * as FileSystem from 'expo-file-system'
 import Header from '../components/header'
 import { CommonActions   } from '@react-navigation/native';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+//import DateTimePickerModal from "react-native-modal-datetime-picker";
 import * as Notifications from 'expo-notifications';
 import AllService from '../services/allservice';
 import Toast from 'react-native-tiny-toast'
@@ -126,7 +126,7 @@ export default function settings(props) {
                             />
                             <Text style={{marginHorizontal:5,color:on?'black':'grey'}}>{'минут'}</Text>
                       </TouchableOpacity>
-                      <DateTimePickerModal
+                      {/* <DateTimePickerModal
                           isVisible={showdate1}
                           mode='time'
                           onConfirm={(e)=>{setHour(e.getHours().toString()),setMinute(e.getMinutes().toString())}}
@@ -137,7 +137,7 @@ export default function settings(props) {
                           mode='time'
                           onConfirm={(e)=>{setHour2(e.getHours().toString()),setMinute2(e.getMinutes().toString())}}
                           onCancel={()=>setShowdate2(false)}
-                        />
+                        /> */}
                 </View>
                 
       </View>

@@ -3,29 +3,29 @@ import {View,Dimensions,ImageBackground} from 'react-native'
 import * as Font from 'expo-font';
 import * as Permissions from 'expo-permissions';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator  } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import * as SQLite from 'expo-sqlite'
-import Prefering from './Screens/apploading';
-import Login from './Screens/login';
-import Home from './Screens/main';
-import Drawerscreen from './Screens/drawer';
-import Monthscreen from './Screens/monthscreen';
-import Exam from './Screens/exam';
-import Examvoice from './Screens/examvoice';
-import Exam7 from './Screens/exam7';
-import Result from './Screens/resultscreen';
-import Result7 from './Screens/resultscreen7';
-import ResultVoice from './Screens/resultscreenVoice';
-import Profile from './Screens/profile';
-import Settings from './Screens/settings';
-import News from './Screens/news';
-import Barcode from './Screens/barcode';
-import Competition from './Screens/competition';
-import Aboutus from './Screens/aboutus';
+import Prefering from './screens/apploading';
+import Login from './screens/login';
+import Home from './screens/main';
+import Drawerscreen from './screens/drawer';
+import Monthscreen from './screens/monthscreen';
+import Exam from './screens/exam';
+import Examvoice from './screens/examvoice';
+import Exam7 from './screens/exam7';
+import Result from './screens/resultscreen';
+import Result7 from './screens/resultscreen7';
+import ResultVoice from './screens/resultscreenVoice';
+import Profile from './screens/profile';
+import Settings from './screens/settings';
+import News from './screens/news';
+import Barcode from './screens/barcode';
+import Competition from './screens/competition';
+import Aboutus from './screens/aboutus';
 import * as Notifications from 'expo-notifications';
-import Phone from './Screens/phone';
-
+import Phone from './screens/phone';
+import "react-native-gesture-handler";
 import config from './config.json'
 
 Notifications.setNotificationHandler({
@@ -37,8 +37,8 @@ Notifications.setNotificationHandler({
 });
 const db=SQLite.openDatabase(config.basename)
 
-const SideStack = createStackNavigator();
-const NewsStack = createStackNavigator();
+const SideStack = createNativeStackNavigator();
+const Stack1 =createNativeStackNavigator();
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -48,17 +48,17 @@ Notifications.setNotificationHandler({
 });
 const NewsStackNav =  (navigation ) => {
   return (  
-    <NewsStack.Navigator initialRouteName={'Competition'} >     
-       <Stack.Screen name="Competition" component={Competition}   options={({navigation})=>({ 
+    <Stack1.Navigator >     
+       <Stack1.Screen name="Competition" component={Competition}   options={({navigation})=>({ 
          headerShown:null     
         })}/>
-        <Stack.Screen name="News"  component={News}  options={({navigation})=>({ 
+        <Stack1.Screen name="News"  component={News}  options={({navigation})=>({ 
          headerShown:null     
         })}/>
-    </NewsStack.Navigator>
+    </Stack1.Navigator>
   );
 }
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 const MainStackNavigator =  (navigation ) => {
   return (
     

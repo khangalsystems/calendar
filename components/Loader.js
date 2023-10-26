@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import { View, StyleSheet, Keyboard, Animated, Easing } from 'react-native';
 import Svg,{ Path, Circle,LinearGradient,Defs,Stop,Ellipse} from "react-native-svg";
-import { BlurView } from 'expo-blur';
-import SvgUri from 'react-native-svg-uri';
 export default class Loader extends Component {
     constructor() {
         super();
