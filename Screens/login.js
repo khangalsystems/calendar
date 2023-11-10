@@ -2,7 +2,6 @@
 import React, { useState,useEffect} from 'react';
 import Constants from 'expo-constants';
 import {ScrollView,TouchableWithoutFeedback,View,StyleSheet,Alert,Text,TextInput, Dimensions, ActivityIndicator,ImageBackground,Switch, Keyboard,TouchableOpacity, Platform} from 'react-native'
-import { CommonActions   } from '@react-navigation/native';
 import { MaterialIcons,FontAwesome,MaterialCommunityIcons} from '@expo/vector-icons'; 
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import * as SecureStore from 'expo-secure-store';

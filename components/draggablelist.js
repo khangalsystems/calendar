@@ -3,10 +3,11 @@ import React,{useState,useRef} from 'react';
 import axios from 'axios';
 import { Audio } from 'expo-av';
 import { Dimensions, StyleSheet,Text, View,TouchableOpacity,ImageBackground,TouchableWithoutFeedback} from 'react-native';
-import DraggableFlatList from "react-native-draggable-flatlist";
+import DraggableFlatList, { NestableDraggableFlatList, NestableScrollContainer } from "react-native-draggable-flatlist";
 import { AntDesign } from '@expo/vector-icons'; 
 import {Paths}from '../assets/list.js';
 import Toast from 'react-native-tiny-toast'
+import { FlatList } from "react-native";
 const screen_height=Dimensions.get('window').height
 const list_item=screen_height>690?60:50
 export default function draggeble(props) {
@@ -61,6 +62,8 @@ export default function draggeble(props) {
               justifyContent: "center"
             }}
             onPressIn={drag}
+            disabled={isActive}
+            
           >
             <Text
               style={{
@@ -106,13 +109,12 @@ export default function draggeble(props) {
           </View>
         );
       };
-      var ref1;
   return (
     <View style={{borderRadius:20,flexDirection:'row',borderRadius:20,width:Dimensions.get('window').width-30,marginHorizontal:15,height:Dimensions.get('window').height-200,justifyContent:'center',alignItems:'center',backgroundColor:'transparent'}}>
-         <View style={{flexDirection:'row',width:Dimensions.get('window').width-80,height:'auto',backgroundColor:'transparent',borderRadius:20}}>
-            <DraggableFlatList
+
+         <View style={{flexDirection:'row',width:'100%',height:'auto',backgroundColor:'transparent',borderRadius:20}}>
+               <FlatList
                 data={data}
-              
                 scrollEnabled={false}
                 dragItemOverflow={false}
                 style={{borderRadius:20}}
@@ -121,27 +123,31 @@ export default function draggeble(props) {
                 />
                 
                 <DraggableFlatList
-                data={data2}
-                scrollEnabled={false}
-                dragItemOverflow={false}
-                ref={flatListRef}
-                alwaysBounceVertical={false}
-                style={{borderRadius:20}}
-                renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive)}
-                keyExtractor={(item, index) => `kr-${item.eng}${index} `}
-                onDragEnd={({ data,from,to }) =>{change(data2,from,to)}}
-                />
-           </View>                    
+                  data={data2}
+                  scrollEnabled={false}
+                  dragItemOverflow={false}
+                  ref={flatListRef}
+                  alwaysBounceVertical={false}
+                  style={{borderRadius:20}}
+                  renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive)}
+                  keyExtractor={(item, index) => `kr-${item.eng}${index} `}
+                  onDragEnd={({ data,from,to }) =>{change(from,to)}}
+                  />
+            </View>
+                       
         </View>
   );
-  function change(data2,from,to)
+  function change(from,to)
   {
-      var i=data2[from];
-      data2[from]=data2[to];
-      data2[to]=i;
-      data2[to].dragged=true;
-      setData2(data2)
-      props.changedata2(data2)
+      
+      var newData=[...data2]
+      var i=newData[from];
+      newData[from]=newData[to];
+      newData[to]=i;
+      newData[to].dragged=true;
+      console.log(newData)
+      setData2(newData)
+      props.changedata2(newData)
   }
 }
 

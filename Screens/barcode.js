@@ -10,7 +10,7 @@ import Appjson from "../app.json";
 import AllService from '../services/allservice';
 import * as Notifications from 'expo-notifications';
 const width=Dimensions.get('window').width
-export default function barcode({navigation,route}) {
+export default function Barcode({navigation,route}) {
 
   const [height, setHeight] = useState(width)
   const [textbarcode, setTextbarcode] = useState('')

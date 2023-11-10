@@ -3,7 +3,7 @@ import { StyleSheet, Text, View,Dimensions} from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/header'
-export default function profile(props) {
+export default function Profile(props) {
   const [data, setData] = useState({})
   const [time, setTime] = useState('')
   useEffect(() => {

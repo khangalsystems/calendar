@@ -6,7 +6,7 @@ import WebView from 'react-native-webview'
 import * as SQLite from 'expo-sqlite'
 import config from '../config.json'
 const db=SQLite.openDatabase(config.basename)
-export default function aboutus(props) {
+export default function Aboutus(props) {
   const [data, setData] = useState({about:' '})
 
   useEffect(() => {

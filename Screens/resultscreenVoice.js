@@ -9,7 +9,7 @@ import DraggableFlatList from "react-native-draggable-flatlist";
 import { AntDesign,Entypo,FontAwesome5} from '@expo/vector-icons'; 
 const screen_height=Dimensions.get('window').height
 const list_item=screen_height>600?60:50
-export default function result({navigation,route}) {
+export default function ResultVoice({navigation,route}) {
     const [playing, setPlaying] = useState(false)
     async function playsound(uri){
         if(!playing)

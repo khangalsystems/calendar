@@ -12,9 +12,8 @@ import AllService from '../services/allservice';
 import config from '../config.json'
 const db=SQLite.openDatabase(config.basename)
 export default function Main({route,navigation}) {
-  let service = new AllService();
   let date=new Date();
-  let nowyear=date.getFullYear()
+  let nowyear=date.getFullYear()-1
   const yeardata= [{
     year:nowyear,
     month:getmonthdata(),
@@ -59,12 +58,46 @@ export default function Main({route,navigation}) {
   function daysInMonth(month,year) {
     return new Date(year, month, 0).getDate();
 }
+const refreshmonth=()=>{
+  async function filldata(){
+   
+
+var lastdata=[]
+for await(const year of yeardata)
+{
+var y=year.year ;
+var monthdata=[];
+var mo=1;
+for await(const month of year.month)
+{
+      
+      var days=[]
+      var amralt=0;
+      for await(const day of month.days)
+      {
+        amralt++;
+                        var date=`${year.year}-${mo<10?'0'+mo:mo}-${day<10?'0'+day:day}`;
+                        var sql='select * from dayscore2 where date="'+date+'"';                    
+                        days.push(await executeSql(sql,day,month.m,amralt))
+                        if(amralt==7) amralt=0;
+                        
+
+      }
+      mo++;
+      monthdata.push({m:month.m,color:month.color,color2:month.color2,days:days})
+}
+  lastdata.push({year:y,month:monthdata})
+}
+setSubdata(lastdata) 
+  }
+filldata();
+}
   useEffect(() => {  
    
 
     var d = new Date();
     var month = d.getMonth() + 1; 
-    var year=d.getFullYear();
+    var year=d.getFullYear()-1;
    
     var day = d.getDate();
      
@@ -82,20 +115,15 @@ export default function Main({route,navigation}) {
       if(route.params.id && route.params.id!=0)
       {
         navigation.navigate('News',{screen:'News',params:{id:route.params.id}})
-      
       }
        else
        {
-      
-      navigation.navigate('Month',{'month':month,'year':year,'day':day,refreshmonth:()=>refreshmonth()})
+           navigation.navigate('Month',{'month':month,'year':year,'day':day,refreshmonth:()=>refreshmonth()})
        }
-     
       firstrefresh();
     
   },[])
-  
-  
-  
+
   async function executeSql(sql,d,m,amralt){
       return new Promise((resolve, reject) =>db.transaction(tx => {
        tx.executeSql(sql, [], (_, { rows }) => {
@@ -107,45 +135,13 @@ export default function Main({route,navigation}) {
         })
       }))
     }
+
   function changemonth(y,m,color){
       var date=new Date();
       //console.log({'color':color,'month':m,'year':y,'day':(m==date.getMonth()+1?date.getDate():1)})
-      navigation.navigate('Month',{'color':color,'month':parseInt(m),'year':y,'day':(m==date.getMonth()+1?date.getDate():1),'refreshmonth':()=>refreshmonth()})
+      navigation.navigate('Month',{'color':color,'month':parseInt(m),'year':y,'day':(m==date.getMonth()+1?date.getDate():1),refreshmonth:refreshmonth()})
   }
-  function refreshmonth(){
-      async function filldata(){
-       
-    
-    var lastdata=[]
-    for await(const year of yeardata)
-    {
-    var y=year.year ;
-    var monthdata=[];
-    var mo=1;
-    for await(const month of year.month)
-    {
-          
-          var days=[]
-          var amralt=0;
-          for await(const day of month.days)
-          {
-            amralt++;
-                            var date=`${year.year}-${mo<10?'0'+mo:mo}-${day<10?'0'+day:day}`;
-                            var sql='select * from dayscore2 where date="'+date+'"';                    
-                            days.push(await executeSql(sql,day,month.m,amralt))
-                            if(amralt==7) amralt=0;
-                            
-    
-          }
-          mo++;
-          monthdata.push({m:month.m,color:month.color,color2:month.color2,days:days})
-    }
-      lastdata.push({year:y,month:monthdata})
-    }
-    setSubdata(lastdata) 
-      }
-   filldata();
-  }
+
   function firstrefresh(){  
     if(subdata.length===0){
     async function filldata(){

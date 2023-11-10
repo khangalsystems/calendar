@@ -9,7 +9,7 @@ import Header from '../components/header';
 import config from '../config.json'
 const db=SQLite.openDatabase(config.basename)
 const width=Dimensions.get('window').width;
-export default function exam7({navigation,route}) {
+export default function Exam7({navigation,route}) {
     const scrollref = useRef(null);
     const [data,setData]=useState([])
     const [loading,setLoading]=useState(true)

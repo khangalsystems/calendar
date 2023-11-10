@@ -8,7 +8,7 @@ import Modal from "react-native-modal";
 
 import config from '../config.json'
 const db=SQLite.openDatabase(config.basename)
-export default function exam({navigation,route}) {
+export default function Exam({navigation,route}) {
     const [data,setData]=useState([])
     const [loading,setLoading]=useState(true)
     const [data2,setData2]=useState([])
@@ -17,16 +17,17 @@ export default function exam({navigation,route}) {
 
   useEffect(() => {   
       var date=''+route.params.year+'-'+(route.params.month<10?'0'+route.params.month:route.params.month)+'-'+(route.params.day<10?'0'+route.params.day:route.params.day)+'';
+      console.log(date)
       db.transaction(
        tx => {
          var qr='select * from D03 where D0304="'+date+'"';          
          tx.executeSql(qr, [],async (trans, result) => { 
-          var tdat=result.rows._array.map( e=>{                
-            return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305,fail:0,dragged:false}})  
-           var tdat2=result.rows._array.map( e=>{                
-              return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305,fail:0,dragged:false}})  
-              setData(shuffleArray(tdat));            
-              setData2(shuffleArray(tdat2));      
+           var tdat=result.rows._array.map( e=>{                
+                   return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305,fail:0,dragged:false
+                  }})  
+            var tdat2=[...tdat]
+               setData(shuffleArray(tdat));            
+               setData2(shuffleArray(tdat2));      
               },(tx,res)=>{console.log(res)});
             
             })
@@ -50,21 +51,25 @@ export default function exam({navigation,route}) {
          
     return array; 
  } 
-  function checkresult(){
+  const checkresult=()=>{
       
-    let tdata=data;
-    let tdata2=data2;
+    var tdata=[...data];
+    var tdata2=[...data2];
     var fail=0;  
     for(var i=0;i<tdata.length;i++)
     {
-        if(tdata[i].eng!==tdata2[i].eng)
+        if(tdata[i].eng!=tdata2[i].eng)
            { 
-             tdata[i].fail=-1;tdata2[i].fail=-1;fail++;
+             tdata[i].fail=-1;
+             tdata2[i].fail=-1;
+             fail++;
            }
-      else { 
-           tdata[i].fail=1;tdata2[i].fail=1
+       else { 
+             tdata[i].fail=1;
+             tdata2[i].fail=1
            }        
     } 
+    console.log(tdata)
     var date2=`${route.params.year}-${route.params.month<10?'0'+route.params.month:route.params.month}-${route.params.day<10?'0'+route.params.day:route.params.day}`;
 
 
@@ -80,7 +85,7 @@ export default function exam({navigation,route}) {
                     ,[]
                     ,(transact,resultset) => {
                       route.params.refresh(route.params.day);
-                      navigation.navigate('Result',{'data1':tdata,'data2':tdata2,'fail':fail,'day':route.params.day,'month':route.params.month,'year':route.params.year,checkalert:()=>route.params.checkalert()})
+                      navigation.navigate('Result',{data1:tdata,data2:tdata2,fail:fail,day:route.params.day,month:route.params.month,year:route.params.year,checkalert:()=>route.params.checkalert()})
                     }
                     ,(transact,err) => console.log('error occured ', err)
                );
@@ -89,23 +94,9 @@ export default function exam({navigation,route}) {
           ,(transact,err) => console.log('error occured ', err)
     );
    })
-
-    
-    
-
   }
-  function changedata1(data1){
-    
-   
-         setData(data1)
-  }
-  function changedata2(data2){
-    
-    setData2(data2)
-   
-}
- 
-  var corref;
+  const changedata1=(data1)=>setData(data1)
+  const changedata2=(data2)=>setData2(data2) 
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch' style={{width:'100%',height:Dimensions.get('window').height}} >
         <View style={[styles.container,{backgroundColor:'transparent'}]}>
@@ -120,10 +111,10 @@ export default function exam({navigation,route}) {
         </Text>
      </View>
         {data2.length===0?null:
-          <Dragglist  data={data} data2={data2} day={route.params.day} changedata1={(data1)=>changedata1(data1)} changedata2={(data2)=>changedata2(data2)}/>}
+          <Dragglist  data={data} data2={data2} day={route.params.day} changedata1={changedata1} changedata2={changedata2}/>}
         <Text style={{textAlign:'center',fontSize:15,fontFamily:'myfont',color:'#1d79cf'}}>{'Монгол үгийг зөөж Англи үгийн харалдаа мөрөнд байрлуулна уу'}</Text>
         <View style={{flexDirection:'row',width:'70%',marginTop:10,marginHorizontal:'20%',height:'auto',justifyContent:'center'}}>
-                <TouchableOpacity onPress={()=>checkresult(corref)}  style={{width:150,height:50,backgroundColor:'#7de89a',borderRadius:50,justifyContent:'center',alignItems:'center'}}>
+                <TouchableOpacity onPress={checkresult}  style={{width:150,height:50,backgroundColor:'#7de89a',borderRadius:50,justifyContent:'center',alignItems:'center'}}>
                 {loading?<ActivityIndicator size={'small'} color={'grey'}/>:
                     <Text style={{color:'white',fontFamily:'myfont'}}>{'ШАЛГАХ'}</Text>}
                 </TouchableOpacity>

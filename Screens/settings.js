@@ -22,7 +22,7 @@ Notifications.setNotificationHandler({
 });
 import config from '../config.json'
 const db=SQLite.openDatabase(config.basename)
-export default function settings(props) {
+export default function Settings(props) {
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();

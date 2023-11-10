@@ -23,43 +23,24 @@ export default function Prefering(props) {
   const [midtext, SetMidtext] = useState('SmartCalendar апп-ийн шинэчлэлт хийгдэж байна түр хүлээнэ үү')
   const [updating, setUpdating] = useState(false)
   useEffect(() => {
-   
-   
     _bootstrapAsync()
-    return () => {
-     
-    }
   }, [])
   
   
- async function _bootstrapAsync(){  
-                   
-                    
- 
-                 let info = await SecureStore.getItemAsync('info');
-                 if(info===null)
-                 {
-                
-                    props.navigation.navigate('Login')
-                    props.navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [
-                        {
-                          name: 'Login',                       
-                        },
-                      ],
-                    })
-                  );
-                  return 0
-                 }
-                 else 
-                 {
-                  var data=JSON.parse(info)                  
-                  checkbase(data); 
-                  return  0;
-                 }
-           };
+ async function _bootstrapAsync(){
+    db.transaction(tx=>{
+        tx.executeSql('select * from D03',
+          [],
+          (tx,result)=>{
+            console.log('result')
+          },
+          (err)=>console.log(err)
+        )
+      },
+      (err)=>{console.log(err)},
+      (succ)=>{console.log(succ)}
+    )             
+  };
   async function checkbase(data)
            {
             var d = new Date();
@@ -85,7 +66,7 @@ export default function Prefering(props) {
                        (tx,error)=>{console.log(error)}
                   )})
               
-           }
+  }
   async function savingNews(data)
   {
  
@@ -218,99 +199,99 @@ export default function Prefering(props) {
             )})
       
     service.SaveAppStart(data.userid,Appjson.expo.version).then(result=>result.json()).then(res=>console.log('saved ++'+res)).catch(()=>{console.log('no internet')})
-   }
-async function update(data){
-  console.log('updateing')
-  var d = new Date();
-  var month = d.getMonth() + 1; 
-  var year = d.getFullYear();
-  let service = new AllService();
-  service.GetAbout().then(result=>result.json()).then( result=>{
-      const query = `insert into companyinfo2(mail,facebookurl,address,about,trialtext,phone,date) values ('${result.mail}','${result.facebookurl}','${result.address}','${result.about}','${result.trialText}','${result.phone}','${result.updateognoo}');`;
-      db.transaction(trx => {
-          let trxQuery = trx.executeSql(
-              query
-              ,[]
-              ,(transact,resultset) => console.log('company info updated')
-              ,(transact,err) => console.log('error occured ', err)
-        );
-      },(err)=>console.log("err tx:"+err)
-      )
-    
-  }).catch(e=>{console.log(e)})            
-    await service.GetCalendarWords(0).then(result=>result.json()).then(async result=>{
-    await result.forEach(async el => {
-                   var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
-                   await db.transaction(async (tx)=>{
-                     await tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
-                     },(tx,result)=>{
-                     console.log(result);
-                   })
-                   })
-                 
-                         
-     }); 
-     
-   }).catch(err=>console.log('getting words err'+err))
-    db.transaction((tx)=>{
-               
-                         service.Getreklams(0,0).then(result=>result.json())
-                         .then(result=>{              
-                          var allnews=result.map(news=>{
-                                    if(news.topimage!='')
-                                    {    
-                                        var imagename=news.topimage.split('/');
-                                        imagename=imagename[imagename.length-1]
-                                        const downloadResumable = FileSystem.createDownloadResumable(
-                                          news.topimage,
-                                          FileSystem.documentDirectory + imagename,
-                                          {},
-                                          (downloadProgress )=>{}
-                                        );
-                                        try {
-                                          downloadResumable.downloadAsync();           
-                                        } catch (e) {
-                                          console.error(e);
-                                        }
-                                        news.topimage=FileSystem.documentDirectory + imagename;
-                                        return(news);
-                                    }
-                                    else
-                                      return (news);
-                             })
-                             Promise.all(allnews).then(async function(results) {
-                                  results.forEach(item => {
-                                  const query = `insert into medee(title,newstext,topimage,date,videourl,newsid) values ('${item.title}','${item.newstext}','${item.topimage}','${item.date}','${item.videourl}',${item.index});`;
-                                  db.transaction(trx => {
-                                      let trxQuery = trx.executeSql(
-                                           query
-                                          ,[]
-                                          ,(transact,resultset) => console.log(resultset)
-                                          ,(transact,err) => console.log('error occured ', err)
-                                     );
-                                  })
-                                 });
-                                //  props.navigation.dispatch(
-                                //   CommonActions.reset({
-                                //     index: 0,
-                                //     routes: [
-                                //       {
-                                //         name:props.data.screen,          
-                                //         params: {
-                                //           id: props.data.id,
-                                //         },        
-                                //       },
-                                //     ],
-                                //   })
-                                // );
-                                props.navigation.navigate('Home',{screen:'Main',params:{id:props.route.params.id,page:props.route.params.screen}})
-                                 
-                             }) 
-                           }).catch(e=>{console.log(e),props.navigation.navigate('Home',{screen:'Main',params:{id:props.route.params.id,page:props.route.params.screen}})})
-                     
+  }
+  async function update(data){
+    console.log('updateing')
+    var d = new Date();
+    var month = d.getMonth() + 1; 
+    var year = d.getFullYear();
+    let service = new AllService();
+    service.GetAbout().then(result=>result.json()).then( result=>{
+        const query = `insert into companyinfo2(mail,facebookurl,address,about,trialtext,phone,date) values ('${result.mail}','${result.facebookurl}','${result.address}','${result.about}','${result.trialText}','${result.phone}','${result.updateognoo}');`;
+        db.transaction(trx => {
+            let trxQuery = trx.executeSql(
+                query
+                ,[]
+                ,(transact,resultset) => console.log('company info updated')
+                ,(transact,err) => console.log('error occured ', err)
+          );
+        },(err)=>console.log("err tx:"+err)
+        )
+      
+    }).catch(e=>{console.log(e)})            
+      await service.GetCalendarWords(0).then(result=>result.json()).then(async result=>{
+      await result.forEach(async el => {
+                    var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
+                    await db.transaction(async (tx)=>{
+                      await tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
+                      },(tx,result)=>{
+                      console.log(result);
                     })
+                    })
+                  
+                          
+      }); 
+      
+    }).catch(err=>console.log('getting words err'+err))
+      db.transaction((tx)=>{
+                
+                          service.Getreklams(0,0).then(result=>result.json())
+                          .then(result=>{              
+                            var allnews=result.map(news=>{
+                                      if(news.topimage!='')
+                                      {    
+                                          var imagename=news.topimage.split('/');
+                                          imagename=imagename[imagename.length-1]
+                                          const downloadResumable = FileSystem.createDownloadResumable(
+                                            news.topimage,
+                                            FileSystem.documentDirectory + imagename,
+                                            {},
+                                            (downloadProgress )=>{}
+                                          );
+                                          try {
+                                            downloadResumable.downloadAsync();           
+                                          } catch (e) {
+                                            console.error(e);
+                                          }
+                                          news.topimage=FileSystem.documentDirectory + imagename;
+                                          return(news);
+                                      }
+                                      else
+                                        return (news);
+                              })
+                              Promise.all(allnews).then(async function(results) {
+                                    results.forEach(item => {
+                                    const query = `insert into medee(title,newstext,topimage,date,videourl,newsid) values ('${item.title}','${item.newstext}','${item.topimage}','${item.date}','${item.videourl}',${item.index});`;
+                                    db.transaction(trx => {
+                                        let trxQuery = trx.executeSql(
+                                            query
+                                            ,[]
+                                            ,(transact,resultset) => console.log(resultset)
+                                            ,(transact,err) => console.log('error occured ', err)
+                                      );
+                                    })
+                                  });
+                                  //  props.navigation.dispatch(
+                                  //   CommonActions.reset({
+                                  //     index: 0,
+                                  //     routes: [
+                                  //       {
+                                  //         name:props.data.screen,          
+                                  //         params: {
+                                  //           id: props.data.id,
+                                  //         },        
+                                  //       },
+                                  //     ],
+                                  //   })
+                                  // );
+                                  props.navigation.navigate('Home',{screen:'Main',params:{id:props.route.params.id,page:props.route.params.screen}})
+                                  
+                              }) 
+                            }).catch(e=>{console.log(e),props.navigation.navigate('Home',{screen:'Main',params:{id:props.route.params.id,page:props.route.params.screen}})})
+                      
+                      })
 
-}
+  }
 
     return (
       <View>

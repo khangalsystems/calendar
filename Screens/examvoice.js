@@ -7,7 +7,7 @@ import DragglistVoice from '../components/draggablelistVoice.js'
 import Modal from "react-native-modal";
 import config from '../config.json'
 const db=SQLite.openDatabase(config.basename)
-export default function examvoice({navigation,route}) {
+export default function Examvoice({navigation,route}) {
     const [data,setData]=useState([])
     const [loading,setLoading]=useState(true)
     const [data2,setData2]=useState([])

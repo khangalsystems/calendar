@@ -3,7 +3,7 @@ import React,{useState} from 'react';
 import { StyleSheet, Text,ActivityIndicator,View,Dimensions,TouchableOpacity,ImageBackground} from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Entypo,FontAwesome5} from '@expo/vector-icons'; 
-export default function result({navigation,route}) {
+export default function Result7({navigation,route}) {
   const [loading, setLoading] = useState(false)
       function result(){
         var data1=route.params.data1;

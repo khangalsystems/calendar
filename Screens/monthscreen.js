@@ -1,4 +1,4 @@
-import React, { useState,useRef } from 'react';
+import React, { useState,useRef, useEffect } from 'react';
 import Constants from 'expo-constants';
 import {View,StyleSheet,Text,TouchableOpacity, Image,TouchableWithoutFeedback, Dimensions, ActivityIndicator,ImageBackground} from 'react-native'
 import {CalendarList,LocaleConfig,Calendar} from 'react-native-calendars';
@@ -10,6 +10,7 @@ import Modal from "react-native-modal";
 import WebView from 'react-native-webview'
 import * as SecureStore from 'expo-secure-store';
 import config from '../config.json'
+import { daysInMonth } from '../functions/daysInMonth';
 const db=SQLite.openDatabase(config.basename)
 LocaleConfig.locales['mn'] = {
   monthNames: ['1 сар','2 сар','3 сар','4 сар','5 сар','6 сар','7 сар','8 сар','9 сар','10 сар','11 сар','12 сар'],
@@ -19,6 +20,20 @@ LocaleConfig.locales['mn'] = {
   today: 'Aujourd\'hui'
 };
 LocaleConfig.defaultLocale = 'mn';
+const monthColors=[
+  {m:'01',color:'#1529d6'},
+  {m:'02',color:'#1529d6'},
+  {m:'03',color:'#ffc4ff'},
+  {m:'04',color:'#ffc4ff'},
+  {m:'05',color:'#ffc4ff'},
+  {m:'06',color:'#07a60c'},
+  {m:'07',color:'#07a60c'},
+  {m:'08',color:'#07a60c'},
+  {m:'09',color:'#c1c414'},
+  {m:'10',color:'#c1c414'},
+  {m:'11',color:'#c1c414'},
+  {m:'12',color:'#1529d6'}
+ ]
  const Monthscreen = ({navigation,route}) => {
   const modalwidth=Dimensions.get('window').width-100;
   const [modal,setModal]=useState(false)
@@ -41,53 +56,38 @@ LocaleConfig.defaultLocale = 'mn';
   let nowyear=date.getFullYear()
   const [markeddates,setMarkeddates]=useState({})
   function fillmarks(){
-    var arr=[
-      {m:'01',color:'#1529d6'},
-      {m:'02',color:'#1529d6'},
-      {m:'03',color:'#ffc4ff'},
-      {m:'04',color:'#ffc4ff'},
-      {m:'05',color:'#ffc4ff'},
-      {m:'06',color:'#07a60c'},
-      {m:'07',color:'#07a60c'},
-      {m:'08',color:'#07a60c'},
-      {m:'09',color:'#c1c414'},
-      {m:'10',color:'#c1c414'},
-      {m:'11',color:'#c1c414'},
-      {m:'12',color:'#1529d6'}
-     ]
-     var days={}
-     arr.forEach(el => {
-      var getTot=daysInMonth(parseInt(el.m),nowyear);
-      for(var i=1;i<=getTot;i++){ 
-        var fdate = new Date(`${nowyear}-${el.m}-${i<10?'0'+i:i}`).getDay()   //looping through days in month
-          if(fdate==0 || fdate==6)
-          {           
-              days[`${nowyear}-${el.m}-${i<10?'0'+i:i}`]={selected: true,  selectedColor:el.color,amralt:true  }   
-          }  
-       }
-     });
-     setMarks(days)
+    setLoading(true)
      checkalert()
-     getmonthdata(-1,days);
-     var date=''+route.params.year+'-'+(route.params.month<10?'0'+route.params.month:route.params.month)+'-'+(route.params.day<10?'0'+route.params.day:route.params.day); 
+     getmonthdata(-1);
+     var date=''+route.params.year+'-'+String(route.params.month).padStart(2,"0")+'-'+String(route.params.day).padStart(2,"0"); 
      setMontfirstday(route.params.day)
      setCurrentdate(date)
-   setDay(route.params.day)
-   setMonth(route.params.month)
- 
-   setYear(route.params.year)
-   setTimeout(() => {
+     setDay(route.params.day)
+     setMonth(route.params.month)
+     setYear(route.params.year)
      setLoading(false)
-    }, 100);
   }
-  function daysInMonth(month,year) {
-    return new Date(year, month, 0).getDate();
-}
- React.useEffect(() => {
-    fillmarks()
-    setLoading(true)
+ useEffect(() => {
+    //fillmarks()
  }, [route.params.year,route.params.month])//route.params.day
- async function checkalert()
+ useEffect(() => {
+  fillVacationDays()
+}, [])
+const fillVacationDays=()=>{
+    var days={}
+    monthColors.forEach(el => {
+    var getTot=daysInMonth(parseInt(el.m),nowyear);
+    for(var i=1;i<=getTot;i++){ 
+        var fdate = new Date(`${nowyear}-${el.m}-${i<10?'0'+i:i}`).getDay()   //looping through days in month
+        if(fdate==0 || fdate==6)
+        {           
+            days[`${nowyear}-${el.m}-${String(i).padStart(2,"0")}`]={selected: true,marked:true,selectedColor:el.color,amralt:true  }   
+        }  
+      }
+    });
+    setMarks(days)
+}
+ const checkalert=async ()=>
  {
   var d = new Date()
   var end=new Date(d.getFullYear(), d.getMonth(), d.getDate()+16);
@@ -123,8 +123,7 @@ LocaleConfig.defaultLocale = 'mn';
       } 
       else {setShowalert(false),setSucctoken(true)}
  }
-
-function  NewDaySelected (day,monthvar){
+  function  NewDaySelected (day,monthvar){
    if(day<=0 && monthvar===1)
    { 
     return;
@@ -136,7 +135,6 @@ function  NewDaySelected (day,monthvar){
    }
    if(day<=0 && monthvar!=1)
    {      
-
       var newday=new Date(route.params.year, (monthvar-1), 0).getDate();
       setMontfirstday(newday)
       setDay(newday)
@@ -184,7 +182,7 @@ function  NewDaySelected (day,monthvar){
      }
    
   };
-  function getmonthdata(d,mar){
+  function getmonthdata(d){
     
     const query = `select * from dayscore2`;
     db.transaction(trx => {
@@ -192,152 +190,30 @@ function  NewDaySelected (day,monthvar){
              query
             ,[]
             ,(transact,resultset) =>{ 
-              let newDaysObject = mar;
+              let newDaysObject = [...marks];
               resultset.rows._array.forEach((daydata) => {
                 newDaysObject[daydata.date] = {
                   selected: true,
+                  marked:true,
                   selectedColor: daydata.scorecolor,            
                 };
               });
-           
-              
               setMarks(newDaysObject);
               setMarkeddates(newDaysObject);
               if(d!=-1)
-              NewDaySelected(d,route.params.month)
+                 NewDaySelected(d,route.params.month)
             }
             ,(transact,err) => console.log('error occured ', err)
        );
     })
 
   }
-  function gohome(){
- 
-   
-    navigation.goBack()
-  }
-  return (
-    <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch'  style={{flex:1}}>
-       
-            <TouchableOpacity onPress={()=>{gohome()}}  style={{width:50,zIndex:2,top:10,position:'absolute',left:10, marginLeft:2,borderRadius:20,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
-               <AntDesign name={"home"}  size={34} color={"#1d79cf"} />
-            </TouchableOpacity>    
-            <TouchableOpacity onPress={()=>{navigation.openDrawer()}}  style={{width:50,marginLeft:2,borderRadius:20,zIndex:2,top:10,position:'absolute',right:10,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
-               <Entypo name="menu" size={40} color="#1d79cf" />
-            </TouchableOpacity>         
-         
-       <View  style={styles.container}>
-          {loading?<View style={{height:'auto',justifyContent:'center',alignItems:'center'}}><ActivityIndicator size={'large'} color={'#8be9f0'}/></View>:
-                <CalendarList
-                    hideArrows={false}
-                    markedDates={markeddates}                           
-                  minDate={route.params.year+'-01-01'}
-                  maxDate={route.params.year+'-12-31'}
-                  current={currentdate}    
-                  style={{height:345}}
-                  renderArrow={(e)=>renderArrow(e)} 
-                  monthFormat={"M сар"} 
-                  firstDay={1}
-                  horizontal
-                  disableLeft={true}
-                  theme={{
-                    textSectionTitleColor:'#1d79cf',//route.params.color,
-                    backgroundColor: 'transparent',
-                    calendarBackground:'transparent', 
-                    textDayHeaderFontSize:14,
-                    todayTextColor:'#5c4e42',
-                    todayBackgroundColor:'#cbf7f7',
-                    textDayFontFamily:'myfont',
-                    textDayHeaderFontFamily:'myfont',
-                    monthTextColor:'#1d79cf'//route.params.color,
-                  }}             
-                  pastScrollRange={10}
-                  futureScrollRange={10}
-                  onVisibleMonthsChange={e=>{
-                          var varmonth=(e[0].month===12 && e[0].year===2020)?12:(e[0].month===1 && e[0].year===2022)?1:e[0].month;
-                          var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
-                          if(month!=e[0].month)
-                           setLoading(true)   
-                          setCurrentdate(date)                      
-                          setMonth(varmonth),setDay(monthfirstday);var ob={}
-                          var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
-                          ob[date] = {
-                            disabled: true,  
-                            disabledbackcolor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
-                          };
-
-                           setMarkeddates({...marks,...ob}) 
-                           setTimeout(() => {
-                            setLoading(false)
-                           }, 100);
-                          
-                      //  }
-                }}              
-                  pagingEnabled
-                  onDayPress={(e)=>{NewDaySelected(e.day,e.month)}}
-               />
-           }
-       </View>
-      
-       <Words year={year} month={month} day={day} changeday={(d,m)=>NewDaySelected(d,m)}/>
-       
-       <TouchableOpacity onPress={()=>openmodal()} style={{justifyContent:'center',alignItems:'center',position:'absolute',zIndex:2,width:80,height:80,borderRadius:50,backgroundColor:'#1cb1ed',bottom:10,right:10}}>
-          <Text style={{textAlign:'center',flexWrap:'wrap',color:'white'}}>{'Шалгалт өгөх'}</Text>
-       </TouchableOpacity>
-
-       <Modal visible={modal}>
-                          <TouchableWithoutFeedback onPress={()=>setModal(false)}>
-                              <View style={styles.modalOverlay} />
-                          </TouchableWithoutFeedback>  
-                          
-                          <View style={styles.Modal}>
-                            <Text style={{color:'#1d79cf',marginTop:10,fontFamily:'myfont',fontSize:16}}>{'Тогтоосон үг бататгах'}</Text>
-                            <TouchableOpacity onPress={()=>navigate1()} style={{marginVertical:5,width:'80%',height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
-                                <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',padding:10}}>{'1 өдрийн үгээр шалгах \n'+currentdate}</Text>      
-
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={()=>navigateVoice()} style={{marginVertical:5,width:'80%',height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
-                                <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',height:'auto',padding:10}}>{'Сонсголоор  шалгалт өгөх \n '+currentdate+''}</Text>      
-
-                            </TouchableOpacity>   
-                            <TouchableOpacity onPress={()=>navigate7()} style={{width:'90%',marginTop:5,height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
-                                <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',height:'auto',padding:10}}>{'3 өдрийн үгээр шалгах \n ('+firstdate+' -c '+lastdate+')'}</Text>      
-
-                            </TouchableOpacity>   
-                              
-                          </View>
-                      </Modal>  
-                      <Modal visible={showalert}>
-                            <TouchableWithoutFeedback onPress={()=>{}}>
-                                <View style={styles.modalOverlay} />
-                            </TouchableWithoutFeedback>  
-                                    
-                                     <TouchableOpacity onPress={()=>relogin()} style={{marginHorizontal:30,marginBottom:5,width:Dimensions.get('window').width-100,borderRadius:10,height:50,backgroundColor:'#8fc1e3',justifyContent:'center',alignItems:'center'}}>
-                                          <Text style={{color:'white',flexWrap:"wrap"}} >{'Идэвхжүүлэх код oруулах'}</Text>
-                                      </TouchableOpacity>
-                            <ImageBackground source={require('../assets/modalimage.png')} imageStyle={{opacity:0.2}} style={styles.Modal2}>
-                                  <View style={{width:'100%',height:300}}>
-                                     
-                                    
-                                    <View style={{width:'100%',color:'white',flex:1,height:'auto'}}>
-                                          <WebView     showsHorizontalScrollIndicator={false}
-                                                    style={{backgroundColor:'rgba(52, 52, 52, 0.01)',height:320,width:'90%',marginHorizontal:'5%',flexWrap:'wrap'}} 
-                                                    source={{html:'<font color="white" size="+7" face="Verdana">'+middletext+'</font>'}} />
-                                    </View>
-                                  </View>            
-                            </ImageBackground>
-                              <TouchableOpacity onPress={()=>{if(!expired){setShowalert(false)}}}  style={{marginHorizontal:30,width:modalwidth,marginTop:5,borderRadius:10,height:50,backgroundColor:'#d12c2c',justifyContent:'center',alignItems:'center'}}>
-                                          <Text style={{color:'white',flexWrap:"wrap"}} >{expired?'Ашиглах хугацаа дууссан байна!':'Үргэлжлүүлэх ('+remain+' хоног)'}</Text>
-                              </TouchableOpacity> 
-                        </Modal> 
-    </ImageBackground>
-  );
-  function relogin()
-  {
+  const gohome=()=>navigation.goBack()
+  const relogin=()=>{
     setShowalert(false);
     navigation.navigate('Barcode',{'closeit':()=>{setShowalert(true)},'succ':()=>{setShowalert(false),setSucctoken(true)} });
   }
-  function openmodal(){
+  const openmodal=()=>{
     var date=''+route.params.year+'-'+(month<10?'0'+month:month)+'-'+(day<10?'0'+day:day)+'';
     setCurrentdate(date)
     var d = new Date(""+route.params.year+"-"+(month<10?'0'+month:month)+"-"+(day<10?'0'+day:day)+"");
@@ -382,24 +258,21 @@ function  NewDaySelected (day,monthvar){
 
     //setLastdate(`${route.params.year}-${month<10?'0'+month:month}-${lastday<10?'0'+lastday:lastday}`)
     setModal(true)
-  }
-  function refresh(dayfr){
-  
-    route.params.refreshmonth();
-  //  checkalert();
+  } 
+  const refresh=(dayfr)=>{
+    var refres=route.params.refreshmonth;
+    refres()
     getmonthdata(dayfr,marks);
-   
   }
-
-  function navigate1(){
+  const navigate1=()=>{
     setModal(false)
-    navigation.navigate('Exam',{'day':day,'month':month,"year":route.params.year,refresh:(d)=>refresh(d),checkalert:()=>checkalert()})
+    navigation.navigate('Exam',{day:day,month:month,year:route.params.year,refresh:(e)=>refresh(e),checkalert:checkalert})
   }
-  function navigateVoice(){
+  const navigateVoice=()=>{
     setModal(false)
     navigation.navigate('Examvoice',{'day':day,'month':month,"year":route.params.year,refresh:(d)=>refresh(d),checkalert:()=>checkalert()})
   }
-  function navigate7(){
+  const navigate7=()=>{
      var wee='';
      var weekdays=getDates()
      weekdays.forEach(el => {
@@ -409,7 +282,7 @@ function  NewDaySelected (day,monthvar){
     setModal(false)
     navigation.navigate('Exam7',{'day':day,'month':month,"year":route.params.year,'weekdays':wee,'firstdate':firstdate,'lastdate':lastdate,refresh:(d)=>refresh(d),checkalert:()=>checkalert()})
    }
-   function getDates() {
+  const getDates=()=>{
     var dateArray = [];
     var currentDate = moment(firstdate);
     var stopDate = moment(lastdate);
@@ -418,20 +291,142 @@ function  NewDaySelected (day,monthvar){
         currentDate = moment(currentDate).add(1, 'days');
     }
     return dateArray;
-}
-function renderArrow (direction) {
-  if(direction === 'left') {
-      return <Ionicons name="ios-arrow-back" size={54} style={{zIndex:2}} color={'#1d79cf'} />
-  } else {
-      return <Ionicons name="ios-arrow-forward" size={54} color={'#1d79cf'} />
   }
+  function renderArrow (direction) {
+    if(direction === 'left') {
+        return <Ionicons name="ios-arrow-back" size={54} style={{zIndex:2}} color={'#1d79cf'} />
+    } else {
+        return <Ionicons name="ios-arrow-forward" size={54} color={'#1d79cf'} />
+    }
+  }
+  const onVisibleMonthsChange=e=>{
+    var varmonth=(e[0].month===12 && e[0].year===2020)?12:(e[0].month===1 && e[0].year===2022)?1:e[0].month;
+    var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
+    if(month!=e[0].month)
+     setLoading(true)   
+    setCurrentdate(date)                      
+    setMonth(varmonth),setDay(monthfirstday);var ob={}
+    var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
+    ob[date] = {
+      disabled: true,  
+      disabledbackcolor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
+    };
+
+     setMarkeddates({...marks,...ob}) 
+     setTimeout(() => {
+      setLoading(false)
+     }, 100);
+    
+//  }
 }
+  return (
+    <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch'  style={{flex:1}}>
+       
+            <TouchableOpacity onPress={gohome}  style={{width:50,zIndex:2,top:10,position:'absolute',left:10, marginLeft:2,borderRadius:20,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
+               <AntDesign name={"home"}  size={34} color={"#1d79cf"} />
+            </TouchableOpacity>    
+            <TouchableOpacity onPress={()=>{navigation.openDrawer()}}  style={{width:50,marginLeft:2,borderRadius:20,zIndex:2,top:10,position:'absolute',right:10,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
+               <Entypo name="menu" size={40} color="#1d79cf" />
+            </TouchableOpacity>         
+         
+       <View  style={styles.container}>
+          {loading?<View style={{height:'auto',justifyContent:'center',alignItems:'center'}}><ActivityIndicator size={'large'} color={'#8be9f0'}/></View>:
+                <CalendarList
+                      hideArrows={false}
+                      markedDates={markeddates}                           
+                      minDate={route.params.year+'-01-01'}
+                      maxDate={route.params.year+'-12-31'}
+                      current={currentdate}    
+                      style={{height:345}}
+                      renderArrow={(e)=>renderArrow(e)} 
+                      monthFormat={"M сар"} 
+                      firstDay={1}
+                      horizontal
+                      disableLeft={true}
+                      theme={{
+                        textSectionTitleColor:'#1d79cf',//route.params.color,
+                        backgroundColor: 'transparent',
+                        calendarBackground:'transparent', 
+                        textDayHeaderFontSize:14,
+                        todayTextColor:'#5c4e42',
+                        todayBackgroundColor:'#cbf7f7',
+                        textDayFontFamily:'myfont',
+                        textDayHeaderFontFamily:'myfont',
+                        monthTextColor:'#1d79cf'//route.params.color,
+                      }}             
+                      pastScrollRange={10}
+                      futureScrollRange={10}
+                      onVisibleMonthsChange={onVisibleMonthsChange}              
+                      pagingEnabled
+                      onDayPress={(e)=>{NewDaySelected(e.day,e.month)}}
+               />
+           }
+       </View>
+      
+       <Words year={year} month={month} day={day} changeday={(d,m)=>NewDaySelected(d,m)}/>
+       
+       <TouchableOpacity onPress={openmodal} style={{justifyContent:'center',alignItems:'center',position:'absolute',zIndex:2,width:80,height:80,borderRadius:50,backgroundColor:'#1cb1ed',bottom:10,right:10}}>
+          <Text style={{textAlign:'center',flexWrap:'wrap',color:'white'}}>{'Шалгалт өгөх'}</Text>
+       </TouchableOpacity>
+
+                     <Modal visible={modal}>
+                          <TouchableWithoutFeedback onPress={()=>setModal(false)}>
+                              <View style={styles.modalOverlay} />
+                          </TouchableWithoutFeedback>  
+                          
+                          <View style={styles.Modal}>
+                            <Text style={{color:'#1d79cf',marginTop:10,fontFamily:'myfont',fontSize:16}}>{'Тогтоосон үг бататгах'}</Text>
+                            <TouchableOpacity onPress={()=>navigate1()} style={{marginVertical:5,width:'80%',height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
+                                <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',padding:10}}>{'1 өдрийн үгээр шалгах \n'+currentdate}</Text>      
+
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={()=>navigateVoice()} style={{marginVertical:5,width:'80%',height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
+                                <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',height:'auto',padding:10}}>{'Сонсголоор  шалгалт өгөх \n '+currentdate+''}</Text>      
+
+                            </TouchableOpacity>   
+                            <TouchableOpacity onPress={()=>navigate7()} style={{width:'90%',marginTop:5,height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
+                                <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',height:'auto',padding:10}}>{'3 өдрийн үгээр шалгах \n ('+firstdate+' -c '+lastdate+')'}</Text>      
+
+                            </TouchableOpacity>   
+                              
+                          </View>
+                      </Modal>  
+                      <Modal visible={showalert}>
+                            <TouchableWithoutFeedback onPress={()=>{}}>
+                                <View style={styles.modalOverlay} />
+                            </TouchableWithoutFeedback>  
+                                    
+                                     <TouchableOpacity onPress={relogin} style={{marginHorizontal:30,marginBottom:5,width:Dimensions.get('window').width-100,borderRadius:10,height:50,backgroundColor:'#8fc1e3',justifyContent:'center',alignItems:'center'}}>
+                                          <Text style={{color:'white',flexWrap:"wrap"}} >{'Идэвхжүүлэх код oруулах'}</Text>
+                                      </TouchableOpacity>
+                            <ImageBackground source={require('../assets/modalimage.png')} imageStyle={{opacity:0.2}} style={styles.Modal2}>
+                                  <View style={{width:'100%',height:300}}>
+                                     
+                                    
+                                    <View style={{width:'100%',color:'white',flex:1,height:'auto'}}>
+                                          <WebView     showsHorizontalScrollIndicator={false}
+                                                    style={{backgroundColor:'rgba(52, 52, 52, 0.01)',height:320,width:'90%',marginHorizontal:'5%',flexWrap:'wrap'}} 
+                                                    source={{html:'<font color="white" size="+7" face="Verdana">'+middletext+'</font>'}} />
+                                    </View>
+                                  </View>            
+                            </ImageBackground>
+                              <TouchableOpacity onPress={()=>{if(!expired){setShowalert(false)}}}  style={{marginHorizontal:30,width:modalwidth,marginTop:5,borderRadius:10,height:50,backgroundColor:'#d12c2c',justifyContent:'center',alignItems:'center'}}>
+                                          <Text style={{color:'white',flexWrap:"wrap"}} >{expired?'Ашиглах хугацаа дууссан байна!':'Үргэлжлүүлэх ('+remain+' хоног)'}</Text>
+                              </TouchableOpacity> 
+                        </Modal> 
+    </ImageBackground>
+  );
+
+
+ 
+
+ 
 };
 
 export default Monthscreen;
 const styles = StyleSheet.create({
   header:{
-    marginTop:Platform.OS=='ios'?Constants.statusBarHeight:0,
+    marginTop:20,
     flexDirection:'row',
     zIndex:2,
     position:'absolute',
@@ -444,7 +439,7 @@ const styles = StyleSheet.create({
     width:'100%',
     backgroundColor:'transparent',
     flexDirection:'column',
-    marginTop:Platform.OS=='ios'?Constants.statusBarHeight:10,
+    marginTop:20,
   },
   daysheader:{width:'14%',fontSize:12,textAlign:'center'},
   dayscontainer:{

@@ -10,7 +10,7 @@ import * as SQLite from 'expo-sqlite'
 import config from '../config.json'
 const db=SQLite.openDatabase(config.basename)
 import AllService from '../services/allservice';
-export default function phone(props) {
+export default function Phone(props) {
   const [data, setData] = useState({address:'',mail:'',about:'',phone:''})
   const [sanal, setSanal] = useState('')
   const [sent, setSent] = useState(false)
