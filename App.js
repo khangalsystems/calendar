@@ -102,11 +102,8 @@ const Drawer = createDrawerNavigator();
  export default function App(props) {
   const [apploading, setApploading] = useState(true)
    useEffect(()=>{
-   
        prepareSql() 
-
     },[])
-
   const prepareSql=async ()=>{
       await Font.loadAsync({
         'myfont': require('./assets/fonts/ROBOTO-REGULAR.ttf'),

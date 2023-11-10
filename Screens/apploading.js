@@ -12,9 +12,7 @@ import {
 import * as SQLite from 'expo-sqlite'
 import * as FileSystem from 'expo-file-system'
 import Appjson from "../app.json";
-import { CommonActions   } from '@react-navigation/native';
 import AllService from '../services/allservice';
-import * as SecureStore from 'expo-secure-store';
 import config from '../config.json'
 import Modal from "react-native-modal";
 const db=SQLite.openDatabase(config.basename)
@@ -28,39 +26,61 @@ export default function Prefering(props) {
   
   
  async function _bootstrapAsync(){
+  db.transaction(tx=>{
     db.transaction(tx=>{
-        tx.executeSql('select * from D03',
-          [],
-          (tx,result)=>{
-            console.log('result')
-          },
-          (err)=>console.log(err)
-        )
-      },
-      (err)=>{console.log(err)},
-      (succ)=>{console.log(succ)}
-    )             
-  };
+      tx.executeSql('select * from D03',
+        [],
+        (tx,result)=>{
+           console.log('result')
+           // if(info==null)
+          // {
+          //    console.log('info null')
+          //    props.navigation.navigate('Login')
+          //    props.navigation.dispatch(
+          //    CommonActions.reset({
+          //      index: 0,
+          //      routes: [
+          //        {
+          //          name: 'Login',                       
+          //        },
+          //      ],
+          //    })
+          //  );
+          //  return 0
+          // }
+          // else 
+          // {
+          //  console.log('info baisan')
+          //  var data=JSON.parse(info)                  
+          //  checkbase(data); 
+          //  return  0;
+           // }
+        },
+        (err)=>console.log(err)
+      )
+    },
+    (err)=>{console.log(err)},
+    (succ)=>{console.log(succ)}
+  )             
+  })}
   async function checkbase(data)
            {
             var d = new Date();
             var month = d.getMonth() + 1; 
             var year = d.getFullYear();
             const query11 = `select * from D03 limit 5`;
-            await db.transaction(trx => {
-                  let trxQuery = trx.executeSql(
+            db.transaction(tx => {
+                  tx.executeSql(
                       query11
                       ,[]
                       ,(transact,resultset) =>{
                          if(resultset.rows._array.length<4){
-                                setUpdating(true)
+                                 setUpdating(true)
                                  update(data) 
-                  
                          }
                          else
                          {
                           savingNews(data);
-                        
                          }
                        },
                        (tx,error)=>{console.log(error)}
@@ -69,27 +89,24 @@ export default function Prefering(props) {
   }
   async function savingNews(data)
   {
- 
     let service = new AllService();
     var token=''
     if(data!=null)
     {
       token = data.token;
     }
-      const query = `select * from medee order by newsid desc`;
-    await db.transaction(trx => {
-
-          let trxQuery = trx.executeSql(
+    const query = `select * from medee order by newsid desc`;
+    db.transaction(trx => {
+          trx.executeSql(
               query
               ,[]
               ,(transact,resultset) =>{ 
-   
                  var lastindex=0;
                  if(resultset.rows._array.length>0)
                  {
                    lastindex=resultset.rows._array[0].newsid
                  }               
-                   service.Getreklams(token,lastindex).then(result=>result.json())
+                  service.Getreklams(token,lastindex).then(result=>result.json())
                    .then(result=>{              
                     var allnews=result.map(news=>{
                               if(news.topimage!='')
@@ -157,8 +174,8 @@ export default function Prefering(props) {
         );
       },(err)=>{console.log('err')},(succ)=>console.log('succ'))
       const query2 = `select * from companyinfo2`;
-      await db.transaction(trx => {
-            let trxQuery = trx.executeSql(
+     db.transaction(trx => {
+            trx.executeSql(
                 query2
                 ,[]
                 ,(transact,resultset) =>{    
@@ -197,7 +214,6 @@ export default function Prefering(props) {
                   }).catch(err=>{console.log('about err2'+err)})
                 }
             )})
-      
     service.SaveAppStart(data.userid,Appjson.expo.version).then(result=>result.json()).then(res=>console.log('saved ++'+res)).catch(()=>{console.log('no internet')})
   }
   async function update(data){
@@ -222,16 +238,13 @@ export default function Prefering(props) {
       await service.GetCalendarWords(0).then(result=>result.json()).then(async result=>{
       await result.forEach(async el => {
                     var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
-                    await db.transaction(async (tx)=>{
-                      await tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
+                    db.transaction(async (tx)=>{
+                      tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
                       },(tx,result)=>{
                       console.log(result);
                     })
-                    })
-                  
-                          
+                    })                          
       }); 
-      
     }).catch(err=>console.log('getting words err'+err))
       db.transaction((tx)=>{
                 
