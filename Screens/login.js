@@ -15,6 +15,7 @@ import * as FileSystem from 'expo-file-system'
 import * as SQLite from 'expo-sqlite'
 import Modal from "react-native-modal";
 import config from '../config.json'
+import dayjs from 'dayjs';
 const db=SQLite.openDatabase(config.basename)
 const screen_heigth=Dimensions.get('window').height
 const item_width=screen_heigth<690?30:40
@@ -27,23 +28,21 @@ const LoginScreen = ({navigation,route}) => {
   const [posdata,setPosdata]=useState([]);
   const [agetext,setAgetext]=useState('6-12 нас');
   const [posindex,setPosindex]=useState(0);
-  const [name,setName]=useState('');
-  const [phone,setPhone]=useState('');
+  const [name,setName]=useState('tesr');
+  const [phone,setPhone]=useState('86963022');
   const [modal,setModal]=useState(false);
   const [modal2,setModal2]=useState(false);
-  const [getnot,setGetnot]=useState(false);
   const [age,setAge]=useState(1);
   const net=NetInfo.useNetInfo();
   let service = new AllService();
   useEffect(() => {
     let isMounted = true;
-
     service.getAimagHot().then(result=>result.json()).then((e)=>{
       if(isMounted){
         setPosdata(e),setPosindex(e[0].index)
       }
       
-    }).catch(error=>console.log(error))
+    }).catch(error=>console.log('error aimag'))
     return () => {
       isMounted = false
     }
@@ -53,9 +52,88 @@ const LoginScreen = ({navigation,route}) => {
     setShowscanner(false);
     setBarkodstr(data);
   };
- 
+  const login=async ()=>{  
+    if(name.length===0 )
+    {
+      Toast.show('Нэр оруулна уу !',{
+        position: Toast.position.TOP,
+        containerStyle:{width:250,height:60,justifyContent:'center',alignItems:'center',backgroundColor:'#fff'},
+        textStyle: {color:'#b3528e'},
+        imgStyle: {},
+        mask: true,
+        maskStyle:{},                   
+      }) 
+     return; 
+    }
+    if( phone.length===0)
+    {
+      Toast.show('Утас оруулна уу !',{
+        position: Toast.position.TOP,
+        containerStyle:{width:250,height:60,justifyContent:'center',alignItems:'center',backgroundColor:'#fff'},
+        textStyle: {color:'#b3528e'},
+        imgStyle: {},
+        mask: true,
+        maskStyle:{},                   
+      }) 
+     return;
+    }
+    
+
+    setLoging(true)
+        var notif='';
+        // try {
+        //   var exnotif = await registerForPushNotificationsAsync();
+        //   notif=exnotif.data
+        // } catch (error) {
+        //   alert(error);
+        // }
+        var bar=(barkodstr==''?'0':barkodstr);
+      
+       //  console.log(notif);
+        service.CheckTokenSaveUser(
+          name,phone,age,bar,notif,posindex,(Platform.OS=='android'?1:2),Appjson.expo.version).then(result=>result.text()).then(result=>{   
+            if(result=='"-2"')
+            {
+              var msg=('Бүртгэлтэй утасны дугаар байна !')  
+              Toast.show(msg,{
+                position: Toast.position.BOTTOM,
+                containerStyle:{width:280,height:80,justifyContent:'center',alignItems:'center',backgroundColor:'#de480d'},
+                textStyle: {flexWrap:'wrap'},
+                imgStyle: {},
+                mask: true,
+                maskStyle:{},                   
+              })
+              setBarkodstr('') 
+                 setLoging(false)
+            }
+          else
+            {
+                    if((result!=='"-1"') && (result!=='"0"'))        
+                      {   
+                        service.SaveAppStart(result.replace(/"/g,''),Appjson.expo.version).then(result=>result.json()).then(res=>console.log('saved ++'+res)) 
+                      
+                        downloadwords(result.replace(/"/g,''))
+                      }
+                    else {
+                      var msg=(result=='"-1"'?'Энэ календарийн qr кодыг 3 уншуулсан байна.Шинэ календарийн QR код уншуулна уу!':'Таны ашигласан код буруу байна!Кодыг календарын араас харна уу !')  
+                      Toast.show(msg,{
+                      position: Toast.position.BOTTOM,
+                      containerStyle:{width:250,height:60,justifyContent:'center',alignItems:'center',backgroundColor:'#de480d'},
+                      textStyle: {},
+                      imgStyle: {},
+                      mask: true,
+                      maskStyle:{},                   
+                    }) 
+                    setBarkodstr('') 
+                    setLoging(false)
+                    }
+               }
+              })
+          .catch((err)=>setLoging(false))
+   
+  }
   
- 
+
   return (
     <TouchableWithoutFeedback style={{width:'100%',height:screen_heigth}} onPress={()=>Keyboard.dismiss()}>
      <ImageBackground source={require('../assets/back2.png')} imageStyle={{opacity:0.7}} resizeMode='cover'  style={styles.container}>
@@ -84,7 +162,7 @@ const LoginScreen = ({navigation,route}) => {
                 onBlur={()=>{}}
                 style={styles.txtinput}
                />
-                <TouchableOpacity style={styles.province} onPress={()=>setModal2(true)}>
+                <TouchableOpacity  style={styles.province}  onPress={()=>setModal2(true)}>
                     <Text style={{color:'white',marginLeft:5,width:'80%'}}>{agetext}</Text>
                     <MaterialIcons name="keyboard-arrow-down" size={24} style={{width:'20%',alignSelf:'center'}} color="white" />
                 </TouchableOpacity>
@@ -94,8 +172,8 @@ const LoginScreen = ({navigation,route}) => {
                 </TouchableOpacity>
            
 
-                <TouchableOpacity style={styles.login} onPress={()=>{if(!logining){login()}}}> 
-                {logining?<ActivityIndicator size="small" color="#b3528e"/>
+                <TouchableOpacity style={styles.login} activeOpacity={logining ? 1 : 0.7} onPress={!logining && login} > 
+                  {logining?<ActivityIndicator size="small" color="#b3528e"/>
                               :<Text style={{color:'#b3528e',textTransform:'uppercase',fontWeight:'bold'}}>{'КАЛЕНДАРь НЭЭХ'}</Text>
   }
                 </TouchableOpacity>
@@ -155,88 +233,8 @@ const LoginScreen = ({navigation,route}) => {
          </TouchableWithoutFeedback>
    
   );
-  async function login(){  
-    if(name.length===0 )
-    {
-      Toast.show('Нэр оруулна уу !',{
-        position: Toast.position.TOP,
-        containerStyle:{width:250,height:60,justifyContent:'center',alignItems:'center',backgroundColor:'#fff'},
-        textStyle: {color:'#b3528e'},
-        imgStyle: {},
-        mask: true,
-        maskStyle:{},                   
-      }) 
-     return; 
-    }
-    if( phone.length===0)
-    {
-      Toast.show('Утас оруулна уу !',{
-        position: Toast.position.TOP,
-        containerStyle:{width:250,height:60,justifyContent:'center',alignItems:'center',backgroundColor:'#fff'},
-        textStyle: {color:'#b3528e'},
-        imgStyle: {},
-        mask: true,
-        maskStyle:{},                   
-      }) 
-     return;
-    }
-    
-
-    setLoging(true)
-        var notif='';
-        try {
-          var exnotif = await registerForPushNotificationsAsync();
-          notif=exnotif.data
-        } catch (error) {
-          alert(error);
-        }
-        var bar=(barkodstr==''?'0':barkodstr);
-      
-       //  console.log(notif);
-        service.CheckTokenSaveUser(
-          name,phone,age,bar,notif,posindex,(Platform.OS=='android'?1:2),Appjson.expo.version).then(result=>result.text()).then(result=>{   
-            if(result=='"-2"')
-            {
-              var msg=('Бүртгэлтэй утасны дугаар байна !')  
-              Toast.show(msg,{
-                position: Toast.position.BOTTOM,
-                containerStyle:{width:280,height:80,justifyContent:'center',alignItems:'center',backgroundColor:'#de480d'},
-                textStyle: {flexWrap:'wrap'},
-                imgStyle: {},
-                mask: true,
-                maskStyle:{},                   
-              })
-              setBarkodstr('') 
-                 setLoging(false)
-            }
-          else
-            {
-              if((result!=='"-1"') && (result!=='"0"'))        
-                 {   
-                  service.SaveAppStart(result.replace(/"/g,''),Appjson.expo.version).then(result=>result.json()).then(res=>console.log('saved ++'+res)) 
-                
-                  downloadwords(result.replace(/"/g,''))
-                 }
-              else {
-                var msg=(result=='"-1"'?'Энэ календарийн qr кодыг 3 уншуулсан байна.Шинэ календарийн QR код уншуулна уу!':'Таны ашигласан код буруу байна!Кодыг календарын араас харна уу !')  
-                Toast.show(msg,{
-                 position: Toast.position.BOTTOM,
-                 containerStyle:{width:250,height:60,justifyContent:'center',alignItems:'center',backgroundColor:'#de480d'},
-                 textStyle: {},
-                 imgStyle: {},
-                 mask: true,
-                 maskStyle:{},                   
-               }) 
-               setBarkodstr('') 
-               setLoging(false)
-              }
-                 
-               }
-              })
-          .catch((err)=>setLoging(false))
-   
-  }
- async function downloadwords(userid){
+  
+ async function downloadwords(){
   setDownloading(true)  
  
   service.GetAbout().then(result=>result.json()).then(async result=>{
@@ -255,66 +253,56 @@ const LoginScreen = ({navigation,route}) => {
          console.log("about err:"+error)
       }
   }).catch(err=>{console.log('about err2'+err)})
-  var today = moment();
-  var endday;
-  endday=moment(today).add(14, 'days');
-  
+    db.transaction(async (tx)=>{
+                                 tx.executeSql('INSERT INTO info(token,phone,name,notifTime,notifTime2,endDay) VALUES ((?),(?),(?),(?),(?),(?))',[barkodstr,phone,name,'11:00','14:00',dayjs().add(13,'days').format('YYYY-MM-DD')],(tx,result)=>{                                       
+                                  },(tx,result)=>{
+                                    console.log(result);
+                               })
+     })
+    savingNews();
+                  db.transaction((tx)=>{
+                       tx.executeSql(`delete from D03`,[],(tx,result)=>{ 
+                                  service.GetCalendarWords(barkodstr).then(result=>result.json()).then(result=>{
+                                    var promises = [];
+                                    console.log(result.length)
+                                    console.log(result[0])
+                                    var i=0
+                                    result.forEach(el => {
 
-  try {
-    await SecureStore.setItemAsync('info', JSON.stringify({token:barkodstr,userid:userid,endtime:endday,getnot:true,age:age,pos:postext,phone:phone,token:barkodstr,name:name,nothour:11,notminut:0,nothour2:14,notminut2:0,posindex:posindex,}));
-    } catch (error)
-     {
-       console.log(error)
-    }
-       
-      savingNews();
-            var query="delete from D03";
-                    db.transaction((tx)=>{
-                       tx.executeSql(query,[],(tx,result)=>{ 
-                         console.log('base cleared')                      
+                                         //var one=new Promise((resolve,reject) =>{
+                                                  db.transaction(async (tx)=>{
+                                                      tx.executeSql("INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))"
+                                                      ,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{
+                                                                i++ 
+                                                                if(i>=2900)
+                                                                {
+                                                                    //Notifications.cancelAllScheduledNotificationsAsync()          
+                                                                    //setDownloading(false);
+                                                                    //setLoging(false)
+                                                                    //setNotif();
+                                                                    navigation.navigate('Home',{screen:'Main',params:{id:0,page:'Main'}})
+                                                                }
+                                                      },(tx,result)=>{
+                                                         console.log('error..'+i)
+                                                      })
+                                                  })
+                                                  
+                                        })
+                                         // promises.push(one)          
+                                    }); 
+                                    //  Promise.all(promises).then(() =>{
+                                    //         console.log('all words done!')
+                                    //         Notifications.cancelAllScheduledNotificationsAsync()          
+                                    //         setDownloading(false);
+                                    //         setLoging(false)
+                                    //         setNotif();
+                                    //        navigation.navigate('Home',{screen:'Main',params:{id:0,page:'Main'}})
+                                    //  }).catch(err=>{console.log('aldaa all prom');console.log(err)});
+                                  //}).catch(err=>console.log('getting words err'+err))
+                        
                       },(tx,result)=>{
-                      
-                    })
-                    })   
-               await service.GetCalendarWords(barkodstr).then(result=>result.json()).then(async result=>{
-               await result.forEach(async el => {
-                              var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
-                              await db.transaction(async (tx)=>{
-                                await tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
-                                },(tx,result)=>{
-                                console.log(result);
-                              })
-                              })
-                            
-                                    
-                }); 
-                
-              }).catch(err=>console.log('getting words err'+err))
-              
-                // await words.forEach(async el => {
-                //                var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
-                //                await db.transaction(async (tx)=>{
-                //                  await tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
-                //                  },(tx,result)=>{
-                //                  console.log(result);
-                //                })
-                //                })
-                             
-                                     
-                //  }); 
-                 
-              
-                db.transaction((tx)=>{  
-                 
-                  Notifications.cancelAllScheduledNotificationsAsync()          
-                     setDownloading(false);
-                     setLoging(false)
-                     setNotif();
-                     navigation.navigate('Home',{screen:'Main',params:{id:0,page:'Main'}})
-                    
-                                                        
-                 
-                })
+                    })})   
+
      
 
   }
@@ -366,28 +354,22 @@ const LoginScreen = ({navigation,route}) => {
                               else
                                 return (news);
                        })
-                       Promise.all(allnews).then(async function(results) {
-                        var bar=new Promise((resolve,reject)=>{
-                          resolve(results.forEach(item => {
-                            const query = `insert into medee(title,newstext,topimage,date,videourl,newsid) values ('${item.title}','${item.newstext}','${item.topimage}','${item.date}','${item.videourl}',${item.index});`;
-                            db.transaction(trx => {
-                                let trxQuery = trx.executeSql(
-                                     query
-                                    ,[]
-                                    ,(transact,resultset) => console.log(resultset)
-                                    ,(transact,err) => console.log('error occured ', err)
-                               );
-                            })
-                           }));
-                        })
-                        bar.then(()=>{
-                         
-                         //  props.navigation.navigate('Home',{'month':month,'year':year,'first':true})
-                           
-                        }) 
-                       
-                   }) 
-                     }).catch(e=>console.log('news err'+e))
+                     Promise.all(allnews).then(async function(results) {
+                            var bar=new Promise((resolve,reject)=>{
+                              resolve(results.forEach(item => {
+                                const query = `insert into medee(title,newstext,topimage,date,videourl,newsid) values ('${item.title}','${item.newstext}','${item.topimage}','${item.date}','${item.videourl}',${item.index});`;
+                                db.transaction(trx => {
+                                    let trxQuery = trx.executeSql(
+                                        query
+                                        ,[]
+                                        ,(transact,resultset) => console.log('medee save')
+                                        ,(transact,err) => console.log('error occured ', err)
+                                  );
+                                })
+                              }));
+                            })   
+                      }) 
+               }).catch(e=>console.log('news err'+e))
                  
             
       
@@ -395,13 +377,13 @@ const LoginScreen = ({navigation,route}) => {
   }
   async function setNotif() {
    
-    const not1=await Notifications.scheduleNotificationAsync({
+    await Notifications.scheduleNotificationAsync({
       content:await getcontent(),
       trigger: {hour:11,
 
        minute:0, repeats: true },
    });
-      const not2=await Notifications.scheduleNotificationAsync({
+      await Notifications.scheduleNotificationAsync({
         content:await getcontent(),
         trigger: {hour:14,
 
@@ -423,29 +405,29 @@ const LoginScreen = ({navigation,route}) => {
         android: {
           "channelId": "chat-messages" //and this
                },
-        data: { screen:'Main',id:0 },
+        data: { screen:'Main'},
       }
     }
- async function  registerForPushNotificationsAsync  () {
-    if (Constants.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync()
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.getPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') {
+//  async function  registerForPushNotificationsAsync  () {
+//     if (true) {
+//       const { status: existingStatus } = await Notifications.getPermissionsAsync()
+//       let finalStatus = existingStatus;
+//       if (existingStatus !== 'granted') {
+//         const { status } = await Notifications.getPermissionsAsync();
+//         finalStatus = status;
+//       }
+//       if (finalStatus !== 'granted') {
        
-        Alert.alert('Алдаа гарлаа', 'Failed to get push token for push notification!');
-        return {data:'android device aas'};
-      }
-      return await Notifications.getDevicePushTokenAsync();
-    } else {
-      
-      Alert.alert('Алдаа гарлаа', 'Must use physical device for Push Notifications');
-      return {data:'android device aas'}
-    }
-  };
+//         Alert.alert('Алдаа гарлаа', 'Failed to get push token for push notification!');
+//         return {data:'android device aas'};
+//       }
+//       return await Notifications.getDevicePushTokenAsync();
+//     } 
+//     else {
+//       Alert.alert('Алдаа гарлаа', 'Must use physical device for Push Notifications');
+//       return {data:'android device aas'}
+//     }
+//   };
 };
 
 export default LoginScreen;

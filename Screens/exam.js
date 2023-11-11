@@ -16,8 +16,7 @@ export default function Exam({navigation,route}) {
     const [firstday,setFirstday]=useState(0)
 
   useEffect(() => {   
-      var date=''+route.params.year+'-'+(route.params.month<10?'0'+route.params.month:route.params.month)+'-'+(route.params.day<10?'0'+route.params.day:route.params.day)+'';
-      console.log(date)
+      var date=''+route.params.year+'-'+(String(route.params.month).padStart(2,'0'))+'-'+(String(route.params.day).padStart(2,'0'));
       db.transaction(
        tx => {
          var qr='select * from D03 where D0304="'+date+'"';          
@@ -31,19 +30,12 @@ export default function Exam({navigation,route}) {
               },(tx,res)=>{console.log(res)});
             
             })
-        
      setFirstday(route.params.day)
      setLoading(false);
-      return () => {
-           return true;
-      }
   },[route.params.type,route.params.day,route.params.month])
   function shuffleArray(array) { 
     for (var i = array.length - 1; i > 0; i--) {  
-     
-        // Generate random number  
-        var j = Math.floor(Math.random() * (i + 1)); 
-                     
+        var j = Math.floor(Math.random() * (i + 1));        
         var temp = array[i]; 
         array[i] = array[j]; 
         array[j] = temp; 
@@ -52,7 +44,6 @@ export default function Exam({navigation,route}) {
     return array; 
  } 
   const checkresult=()=>{
-      
     var tdata=[...data];
     var tdata2=[...data2];
     var fail=0;  
@@ -78,7 +69,7 @@ export default function Exam({navigation,route}) {
           'delete from dayscore2 where date="'+date2+'"'
           ,[]
           ,(transact,resultset) =>{
-            const query = `insert into dayscore2 (date,score,scorecolor) values ('${date2}',${fail==0?2:fail<4?1:0},'${fail==0?'#13d436':fail<4?'#27e6e2':'#de480d'}');`;
+            const query = `insert into dayscore2 (date,score,scorecolor,year,month,day) values ('${date2}',${fail==0?2:fail<4?1:0},'${fail==0?'#13d436':fail<4?'#27e6e2':'#de480d'}',${route.params.year},${route.params.month},${route.params.day});`;
             db.transaction(trx => {
                 let trxQuery = trx.executeSql(
                      query

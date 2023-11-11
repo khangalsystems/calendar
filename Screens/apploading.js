@@ -15,55 +15,57 @@ import Appjson from "../app.json";
 import AllService from '../services/allservice';
 import config from '../config.json'
 import Modal from "react-native-modal";
+import { execQuery } from '../functions/execQuery';
+import dayjs from 'dayjs';
 const db=SQLite.openDatabase(config.basename)
 export default function Prefering(props) {
   
-  const [midtext, SetMidtext] = useState('SmartCalendar апп-ийн шинэчлэлт хийгдэж байна түр хүлээнэ үү')
+  const  midtext= useState('SmartCalendar апп-ийн шинэчлэлт хийгдэж байна түр хүлээнэ үү')
   const [updating, setUpdating] = useState(false)
   useEffect(() => {
     _bootstrapAsync()
   }, [])
   
   
- async function _bootstrapAsync(){
+  async function _bootstrapAsync(){
+    console.log('apploading.2.')
   db.transaction(tx=>{
     db.transaction(tx=>{
-      tx.executeSql('select * from D03',
+      tx.executeSql('select * from info',
         [],
         (tx,result)=>{
-           console.log('result')
-           // if(info==null)
-          // {
-          //    console.log('info null')
-          //    props.navigation.navigate('Login')
-          //    props.navigation.dispatch(
-          //    CommonActions.reset({
-          //      index: 0,
-          //      routes: [
-          //        {
-          //          name: 'Login',                       
-          //        },
-          //      ],
-          //    })
-          //  );
-          //  return 0
-          // }
-          // else 
-          // {
-          //  console.log('info baisan')
-          //  var data=JSON.parse(info)                  
-          //  checkbase(data); 
-          //  return  0;
-           // }
-        },
-        (err)=>console.log(err)
+           var len=result.rows._array.length
+            console.log(len)
+              if(len==0)
+              {
+                    props.navigation.navigate('Login')
+                    props.navigation.dispatch(
+                    CommonActions.reset({
+                      index: 0,
+                      routes: [
+                        {
+                          name: 'Login',                       
+                        },
+                      ],
+                    })
+                  );
+                  return 0
+              }
+              else 
+              {
+                console.log('checking base..')
+                checkbase(); 
+                return  0;
+              }
+          },
+        (tx,err)=>console.log(err)
       )
     },
-    (err)=>{console.log(err)},
-    (succ)=>{console.log(succ)}
+    (err)=>{console.log('err')},
+    (succ)=>{console.log('succ')}
   )             
   })}
-  async function checkbase(data)
+  async function checkbase()
            {
             var d = new Date();
             var month = d.getMonth() + 1; 
@@ -76,11 +78,11 @@ export default function Prefering(props) {
                       ,(transact,resultset) =>{
                          if(resultset.rows._array.length<4){
                                  setUpdating(true)
-                                 update(data) 
+                                 update() 
                          }
                          else
                          {
-                          savingNews(data);
+                                 savingNews();
                          }
                        },
                        (tx,error)=>{console.log(error)}
@@ -216,38 +218,44 @@ export default function Prefering(props) {
             )})
     service.SaveAppStart(data.userid,Appjson.expo.version).then(result=>result.json()).then(res=>console.log('saved ++'+res)).catch(()=>{console.log('no internet')})
   }
-  async function update(data){
+  async function update(){
     console.log('updateing')
     var d = new Date();
     var month = d.getMonth() + 1; 
     var year = d.getFullYear();
     let service = new AllService();
-    service.GetAbout().then(result=>result.json()).then( result=>{
-        const query = `insert into companyinfo2(mail,facebookurl,address,about,trialtext,phone,date) values ('${result.mail}','${result.facebookurl}','${result.address}','${result.about}','${result.trialText}','${result.phone}','${result.updateognoo}');`;
-        db.transaction(trx => {
-            let trxQuery = trx.executeSql(
-                query
-                ,[]
-                ,(transact,resultset) => console.log('company info updated')
-                ,(transact,err) => console.log('error occured ', err)
-          );
-        },(err)=>console.log("err tx:"+err)
-        )
+    const result=await service.GetAbout().then(result=>result.json())
+    //.then(result=>result.json()).then( result=>{
+    const query = `insert into companyinfo2(mail,facebookurl,address,about,trialtext,phone,date) values ('${result.mail}','${result.facebookurl}','${result.address}','${result.about}','${result.trialText}','${result.phone}','${result.updateognoo}');`;
+    db.transaction(trx => {
+          execQuery(trx,query).then(async e=>{
+                const result=await service.GetCalendarWords(0).then(result=>result.json())
+                result.forEach(async el => {
+                                var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
+                                db.transaction(async (tx)=>{
+                                  tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
+                                  },(tx,result)=>{
+                                })
+                            })                          
+                }); 
+          })
+    },(err)=>console.log("err tx:"+err))
+  
       
-    }).catch(e=>{console.log(e)})            
-      await service.GetCalendarWords(0).then(result=>result.json()).then(async result=>{
-      await result.forEach(async el => {
-                    var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
-                    db.transaction(async (tx)=>{
-                      tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
-                      },(tx,result)=>{
-                      console.log(result);
-                    })
-                    })                          
-      }); 
-    }).catch(err=>console.log('getting words err'+err))
+    // }).catch(e=>{console.log(e)})  
+  
+    //   await service.GetCalendarWords(0).then(result=>result.json()).then(async result=>{
+    //   await result.forEach(async el => {
+    //                 var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
+    //                 db.transaction(async (tx)=>{
+    //                   tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
+    //                   },(tx,result)=>{
+    //                   console.log(result);
+    //                 })
+    //                 })                          
+    //   }); 
+    // }).catch(err=>console.log('getting words err'+err))
       db.transaction((tx)=>{
-                
                           service.Getreklams(0,0).then(result=>result.json())
                           .then(result=>{              
                             var allnews=result.map(news=>{
@@ -279,28 +287,17 @@ export default function Prefering(props) {
                                         let trxQuery = trx.executeSql(
                                             query
                                             ,[]
-                                            ,(transact,resultset) => console.log(resultset)
+                                            ,(transact,resultset) => {
+                                                 var date=dayjs()
+                                                 props.navigation.navigate('Home',{screen:'Monthscreen'})
+                                            }
                                             ,(transact,err) => console.log('error occured ', err)
                                       );
                                     })
                                   });
-                                  //  props.navigation.dispatch(
-                                  //   CommonActions.reset({
-                                  //     index: 0,
-                                  //     routes: [
-                                  //       {
-                                  //         name:props.data.screen,          
-                                  //         params: {
-                                  //           id: props.data.id,
-                                  //         },        
-                                  //       },
-                                  //     ],
-                                  //   })
-                                  // );
-                                  props.navigation.navigate('Home',{screen:'Main',params:{id:props.route.params.id,page:props.route.params.screen}})
-                                  
+      
                               }) 
-                            }).catch(e=>{console.log(e),props.navigation.navigate('Home',{screen:'Main',params:{id:props.route.params.id,page:props.route.params.screen}})})
+                            }).catch(e=>{console.log(e),props.navigation.navigate('Home',{screen:'Monthscreen'})})
                       
                       })
 

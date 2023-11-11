@@ -8,8 +8,9 @@ import Month from '../components/month.js';
 import HeaderMain from '../components/headermain';
 import { CommonActions } from '@react-navigation/native';
 import Loader from '../components/Loader';
-import AllService from '../services/allservice';
 import config from '../config.json'
+import { daysInMonth } from '../functions/daysInMonth.js';
+import dayjs from 'dayjs';
 const db=SQLite.openDatabase(config.basename)
 export default function Main({route,navigation}) {
   let date=new Date();
@@ -55,9 +56,7 @@ export default function Main({route,navigation}) {
   }
   const [loading,setLoading]=useState(true)
   const [subdata,setSubdata]=useState([])
-  function daysInMonth(month,year) {
-    return new Date(year, month, 0).getDate();
-}
+
 const refreshmonth=()=>{
   async function filldata(){
    
@@ -93,14 +92,8 @@ setSubdata(lastdata)
 filldata();
 }
   useEffect(() => {  
-   
 
-    var d = new Date();
-    var month = d.getMonth() + 1; 
-    var year=d.getFullYear()-1;
-   
-    var day = d.getDate();
-     
+    var nowDate =dayjs();
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
@@ -112,16 +105,9 @@ filldata();
         ],
       })
     );
-      if(route.params.id && route.params.id!=0)
-      {
-        navigation.navigate('News',{screen:'News',params:{id:route.params.id}})
-      }
-       else
-       {
-           navigation.navigate('Month',{'month':month,'year':year,'day':day,refreshmonth:()=>refreshmonth()})
-       }
-      firstrefresh();
-    
+   
+    navigation.navigate('Month',{'month':nowDate.month()+1,'year':nowDate.year()-1,'day':nowDate.date(),refreshmonth:()=>refreshmonth()})
+    firstrefresh();
   },[])
 
   async function executeSql(sql,d,m,amralt){

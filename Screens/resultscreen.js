@@ -12,7 +12,7 @@ export default function Result({navigation,route}) {
           <View
             style={{
               height:list_item,
-              backgroundColor: item.fail==1?'green':item.fail==0?'white':'#de3a21',
+              backgroundColor: item.fail==0?'green':'white',
               borderRadius:0,
               borderBottomWidth:0.5,
               flexDirection:'row',
@@ -23,7 +23,7 @@ export default function Result({navigation,route}) {
           >
             <Text
               style={{
-                color: item.fail==1?'white':item.fail==0?'red':'#de3a21',
+                color: item.fail==0?'white':'red',
                 flexWrap:'wrap',
                 width:'49%',
                 fontFamily:'myfont',
@@ -35,7 +35,7 @@ export default function Result({navigation,route}) {
             >
               {item.mong}
             </Text>
-              {item.fail==1?<FontAwesome5  style={{width:'20%',alignSelf:'center'}} name="smile" size={24} color="white" />:<Entypo name="emoji-sad" style={{width:'20%',alignSelf:'center'}} size={24} color="red" /> }
+              {item.fail==0?<FontAwesome5  style={{width:'20%',alignSelf:'center'}} name="smile" size={24} color="white" />:<Entypo name="emoji-sad" style={{width:'20%',alignSelf:'center'}} size={24} color="red" /> }
           </View>
         );
       };
@@ -73,15 +73,14 @@ export default function Result({navigation,route}) {
       };
   const checkAndNavigate=()=>{
     route.params.checkalert()
-    console.log({day:route.params.day,month:route.params.month})
-    navigation.navigate('Month',{day:route.params.day,month:route.params.month});
+    navigation.navigate('Month',{day:route.params.day,month:route.params.month,year:route.params.year});
   }
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch'  style={{flexDirection:'column',width:'100%',height:Dimensions.get('window').height-20,justifyContent:'center',alignItems:'center',backgroundColor:'white'}}>
        <Text style={{fontFamily:'myfont',color:'#1d79cf',marginBottom:20,fontSize:15}}>{`${route.params.year}-${route.params.month<10?'0'+route.params.month:route.params.month}-${route.params.day<10?'0'+route.params.day:route.params.day} ны Шалгалтын хариу`}</Text>
 
         <View style={{flexDirection:'row',width:'100%',height:'auto',backgroundColor:'white'}}>
-             <DraggableFlatList
+               <DraggableFlatList
                 data={route.params.data1}
                 renderItem={({ item, index, drag, isActive })=>renderItem2(item, index, drag, isActive)}
                 keyExtractor={(item, index) => `kr-${item.eng}${index} `}

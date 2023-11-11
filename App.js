@@ -26,6 +26,7 @@ import * as Notifications from 'expo-notifications';
 import Phone from './screens/phone';
 import "react-native-gesture-handler";
 import config from './config.json'
+import { execQuery } from './functions/execQuery';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -109,25 +110,44 @@ const Drawer = createDrawerNavigator();
         'myfont': require('./assets/fonts/ROBOTO-REGULAR.ttf'),
       }) 
       db.transaction(async tx => {
-        await execQuery(tx,'CREATE TABLE IF NOT EXISTS  medee(title text,newstext text,topimage text,date text,videourl text,newsid integer);') 
-        await execQuery(tx,'CREATE TABLE IF NOT EXISTS  D03(D0300 integer, D0301 text, D0302 text,D0303 text,D0304 text,D0305 text,D0306 text,D0307 integer);') 
-        await execQuery(tx,'CREATE TABLE IF NOT EXISTS  companyinfo2(mail text,facebookurl text,address text,about text,trialtext text,phone text,date text);') 
-        await execQuery(tx,'CREATE TABLE IF NOT EXISTS  dayscore2(date text,score integer,scorecolor text);') 
-        setApploading(false)
+        execQuery(tx,'CREATE TABLE IF NOT EXISTS  medee(title text,newstext text,topimage text,date text,videourl text,newsid integer);').
+        then(e=>{ 
+             console.log(e)
+            db.transaction(async tx2 => {
+              execQuery(tx2,'CREATE TABLE IF NOT EXISTS  D03(D0300 integer, D0301 text, D0302 text,D0303 text,D0304 text,D0305 text,D0306 text,D0307 integer);').
+              then(e=>{
+                  console.log(e)
+                 db.transaction(async tx3 => {
+                  execQuery(tx3,'CREATE TABLE IF NOT EXISTS  companyinfo2(mail text,facebookurl text,address text,about text,trialtext text,phone text,date text);').
+                  then(e=>{
+                       console.log(e)
+                       db.transaction(async tx4 => {
+                        execQuery(tx4,'CREATE TABLE IF NOT EXISTS  dayscore2(date text,score integer,scorecolor text,year integer,month integer,day integer);').
+                        then(e=>{
+                             console.log(e)
+                             db.transaction(async tx5 => {
+                              execQuery(tx5,'CREATE TABLE IF NOT EXISTS  info(token text,phone text,name text,notifTime text,notifTime2 text,endDay text);').
+                              then(e=>{
+                                  console.log(e)
+                                  setApploading(false)
+                              })
+                            },(err)=>{},(succ)=>{})
+                        })
+                      },(err)=>{},(succ)=>{})
+                  })
+                },(err)=>{},(succ)=>{})
+              })
+            },(err)=>{},(succ)=>{})
+        })
+        //console.log(result) 
+        // const result2=await execQuery(tx,'CREATE TABLE IF NOT EXISTS  D03(D0300 integer, D0301 text, D0302 text,D0303 text,D0304 text,D0305 text,D0306 text,D0307 integer);') 
+        // const result3=await execQuery(tx,'CREATE TABLE IF NOT EXISTS  companyinfo2(mail text,facebookurl text,address text,about text,trialtext text,phone text,date text);') 
+        // const result4=await execQuery(tx,'CREATE TABLE IF NOT EXISTS  dayscore2(date text,score integer,scorecolor text);')
+        //console.log(result)
+        
       })
     }
-  const execQuery=async (tx,query)=>{
-    return new Promise(async resolve =>{
-         tx.executeSql(
-          'CREATE TABLE IF NOT EXISTS  medee(title text,newstext text,topimage text,date text,videourl text,newsid integer);'
-          ,[]
-          ,(tx,res)=>{
-              resolve()
-            }
-          ,(tx,res)=>{console.log(query)}     
-          )
-    })
-  }
+
      
  
   if(apploading)
@@ -136,11 +156,11 @@ const Drawer = createDrawerNavigator();
         <ImageBackground source={require('./assets/modalimage.png')} style={{width:Dimensions.get('screen').width,height:Dimensions.get('screen').height+30}}/>
       </View>
     )
-  else{console.log('returned')
+  else{
       return (
             <NavigationContainer >
                 <Drawer.Navigator   screenOptions={{headerShown:false}}  initialRouteName='Apploading'  drawerStyle={{backgroundColor:'#fff',width:Dimensions.get('window').width/1.6}}  drawerContent={(props) => <Drawerscreen {...props} />}  drawerType={Dimensions.width >= 768 ? 'permanent' : 'front'} >  
-                    <Drawer.Screen options={{headerShown:false}} name="Apploading" initialParams={{id:0}} component={Prefering} />
+                    <Drawer.Screen options={{headerShown:false}} name="Apploading"  component={Prefering} />
                     <Drawer.Screen options={{headerShown:false}} name="Login"  component={Login} />
                     <Drawer.Screen options={{headerShown:false}} name="Home"  component={MainStackNavigator} />
                     <Drawer.Screen options={{headerShown:false}} name="Profile"  component={Profile} />

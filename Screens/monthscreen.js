@@ -11,6 +11,7 @@ import WebView from 'react-native-webview'
 import * as SecureStore from 'expo-secure-store';
 import config from '../config.json'
 import { daysInMonth } from '../functions/daysInMonth';
+import dayjs from 'dayjs';
 const db=SQLite.openDatabase(config.basename)
 LocaleConfig.locales['mn'] = {
   monthNames: ['1 сар','2 сар','3 сар','4 сар','5 сар','6 сар','7 сар','8 сар','9 сар','10 сар','11 сар','12 сар'],
@@ -35,12 +36,15 @@ const monthColors=[
   {m:'12',color:'#1529d6'}
  ]
  const Monthscreen = ({navigation,route}) => {
+  let date=dayjs();
+  let nowyear=date.year()-1
   const modalwidth=Dimensions.get('window').width-100;
   const [modal,setModal]=useState(false)
   const [loading,setLoading]=useState(true)
   const [loadedmonths,setLoadedmonths]=useState([])
+  const [activeDateString,setActiveDateString]=useState(date.format('YYYY-MM-DD'))
   const [currentdate, setCurrentdate] = useState('')
-  const [day, setDay] = useState(0)
+  const [day, setDay] = useState(route.params.day?route.params.day:date.date())
   const [month, setMonth] = useState(0)
   const [year, setYear] = useState(0)
   const [monthfirstday, setMontfirstday] = useState(1)
@@ -52,156 +56,107 @@ const monthColors=[
   const [succtoken, setSucctoken] = useState(false)
   const [expired, setExpired] = useState(false)
   const [marks,setMarks]=useState({})
-  let date=new Date();
-  let nowyear=date.getFullYear()
   const [markeddates,setMarkeddates]=useState({})
   function fillmarks(){
-    setLoading(true)
+     setLoading(true)
      checkalert()
-     getmonthdata(-1);
+     getmonthdata(route.params.year,route.params.month);
      var date=''+route.params.year+'-'+String(route.params.month).padStart(2,"0")+'-'+String(route.params.day).padStart(2,"0"); 
      setMontfirstday(route.params.day)
      setCurrentdate(date)
      setDay(route.params.day)
      setMonth(route.params.month)
+     NewDaySelected(route.params.day,route.params.month)
+     //fillVacationDays(route.params.year,route.params.month)
      setYear(route.params.year)
      setLoading(false)
   }
  useEffect(() => {
-    //fillmarks()
+    fillmarks()
  }, [route.params.year,route.params.month])//route.params.day
- useEffect(() => {
-  fillVacationDays()
-}, [])
-const fillVacationDays=()=>{
-    var days={}
-    monthColors.forEach(el => {
-    var getTot=daysInMonth(parseInt(el.m),nowyear);
-    for(var i=1;i<=getTot;i++){ 
-        var fdate = new Date(`${nowyear}-${el.m}-${i<10?'0'+i:i}`).getDay()   //looping through days in month
-        if(fdate==0 || fdate==6)
-        {           
-            days[`${nowyear}-${el.m}-${String(i).padStart(2,"0")}`]={selected: true,marked:true,selectedColor:el.color,amralt:true  }   
-        }  
-      }
-    });
-    setMarks(days)
-}
- const checkalert=async ()=>
- {
-  var d = new Date()
-  var end=new Date(d.getFullYear(), d.getMonth(), d.getDate()+16);
-  var data=await SecureStore.getItemAsync('info');
-  data=JSON.parse(data)
-  var endday=Date.parse(data.endtime)
-  //console.log(data)
-  if(endday<end){
-        var today = moment();
-        var d = moment(data.endtime);
-        setRemain(today.diff(d,'days')*-1);
-        if((today.diff(d,'days')*-1)<=0)
-            {
-              setExpired(true)
-            }   
-            else  setExpired(false) 
 
-         setShowalert(true)  
-         const query = `select * from companyinfo2`;
-         db.transaction(trx => {
-             let trxQuery = trx.executeSql(
-                 query
-                 ,[]
-                 ,(transact,resultset) =>{                  
-            
-                   setMiddletext(resultset.rows._array[0].trialtext)
-                 }
-                 ,(transact,err) => console.log('error occured ', err)
-           );
-         })
-        // let service = new AllService();
-        // service.GetModalText().then(result=>result.json()).then(res=>{setMiddletext(res.trialText)})
-      } 
-      else {setShowalert(false),setSucctoken(true)}
- }
+
+  const fillVacationDays=(year,month)=>{
+      var days={}
+      var color=monthColors.find(a=>a.m==month).color
+      var getTot=daysInMonth(parseInt(month),year);
+      for(var i=1;i<=getTot;i++){ 
+          var fdate = new Date(`${nowyear}-${month}-${i<10?'0'+i:i}`).getDay()   //looping through days in month
+          if(fdate==0 || fdate==6)
+          {           
+              days[`${nowyear}-${String(month).padStart(2,"0")}-${String(i).padStart(2,"0")}`]={selected: true,selectedColor:color,amralt:true  }   
+          }  
+        }
+      return days 
+  }
+  const checkalert=async ()=>
+  {
+    return
+    var d = new Date()
+    var end=new Date(d.getFullYear(), d.getMonth(), d.getDate()+16);
+    var data=await SecureStore.getItemAsync('info');
+    data=JSON.parse(data)
+    var endday=Date.parse(data.endtime)
+    //console.log(data)
+    if(endday<end){
+          var today = moment();
+          var d = moment(data.endtime);
+          setRemain(today.diff(d,'days')*-1);
+          if((today.diff(d,'days')*-1)<=0)
+              {
+                setExpired(true)
+              }   
+              else  setExpired(false) 
+
+          setShowalert(true)  
+          const query = `select * from companyinfo2`;
+          db.transaction(trx => {
+              let trxQuery = trx.executeSql(
+                  query
+                  ,[]
+                  ,(transact,resultset) =>{                  
+              
+                    setMiddletext(resultset.rows._array[0].trialtext)
+                  }
+                  ,(transact,err) => console.log('error occured ', err)
+            );
+          })
+          // let service = new AllService();
+          // service.GetModalText().then(result=>result.json()).then(res=>{setMiddletext(res.trialText)})
+        } 
+        else {setShowalert(false),setSucctoken(true)}
+  }
   function  NewDaySelected (day,monthvar){
-   if(day<=0 && monthvar===1)
-   { 
-    return;
-   } 
-   var lastday=new Date(route.params.year,monthvar,0).getDate()
-   if(day>lastday && monthvar===12)
-   {     
-    return;
-   }
-   if(day<=0 && monthvar!=1)
-   {      
-      var newday=new Date(route.params.year, (monthvar-1), 0).getDate();
-      setMontfirstday(newday)
-      setDay(newday)
-      setMonth((monthvar-1))
-       var ob={}
-       var date=route.params.year+'-'+((monthvar-1)<10?'0'+(monthvar-1):(monthvar-1))+'-'+(newday);
-       setCurrentdate(date)
-      ob[date] = {
-        disabled: true,
-        disabledbackcolor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
-      };
-      setMarkeddates({...marks,...ob})  
-
-      return 0;
-   }
-   if(day>lastday && monthvar!=12)
-   {      
-     setMontfirstday(1)
-      var ob={}
-      var date=route.params.year+'-'+((monthvar+1)<10?'0'+(monthvar+1):(monthvar-1))+'-01';
-      setCurrentdate(date)
-      ob[date] = {
-        disabled: true, 
-        disabledbackcolor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
-      };
-      setMarkeddates({...marks,...ob})  
-      setDay(1)    
-      setMonth((monthvar+1))
-      return 0;
-   }
-   else{
-
-    var ob={}
-    var date=route.params.year+'-'+(monthvar<10?'0'+monthvar:monthvar)+'-'+(day<10?'0'+day:day);
-    setCurrentdate(date)
-    ob[date] = {
-      disabled: true,  
-      disabledbackcolor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
+    console.log('day changed:'+day,monthvar)
+     var date=route.params.year+'-'+(String(monthvar).padStart(2,'0'))+'-'+(String(day).padStart(2,'0'));
+     setCurrentdate(date)
+      var oldMarks={...marks}
+    oldMarks[date] = {
+      selected: true,  
+      selectedColor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
     };
-
-    setMarkeddates({...marks,...ob})  
+    setMarkeddates(oldMarks)  
     setDay(day)
     setMonth(monthvar)
-    setMontfirstday(1)
-     }
-   
   };
-  function getmonthdata(d){
-    
-    const query = `select * from dayscore2`;
+  function getmonthdata(year,month){
+    setLoading(true)
+    const query = `select * from dayscore2 where year=(?) and month=(?)`;
     db.transaction(trx => {
         let trxQuery = trx.executeSql(
              query
-            ,[]
+            ,[year,month]
             ,(transact,resultset) =>{ 
-              let newDaysObject = [...marks];
+              let newDaysObject = fillVacationDays(year,month);
               resultset.rows._array.forEach((daydata) => {
                 newDaysObject[daydata.date] = {
                   selected: true,
-                  marked:true,
                   selectedColor: daydata.scorecolor,            
                 };
               });
               setMarks(newDaysObject);
               setMarkeddates(newDaysObject);
-              if(d!=-1)
-                 NewDaySelected(d,route.params.month)
+              setLoading(false)
             }
             ,(transact,err) => console.log('error occured ', err)
        );
@@ -262,7 +217,7 @@ const fillVacationDays=()=>{
   const refresh=(dayfr)=>{
     var refres=route.params.refreshmonth;
     refres()
-    getmonthdata(dayfr,marks);
+    getmonthdata(route.params.year,route.params.month);
   }
   const navigate1=()=>{
     setModal(false)
@@ -300,22 +255,29 @@ const fillVacationDays=()=>{
     }
   }
   const onVisibleMonthsChange=e=>{
-    var varmonth=(e[0].month===12 && e[0].year===2020)?12:(e[0].month===1 && e[0].year===2022)?1:e[0].month;
-    var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
-    if(month!=e[0].month)
-     setLoading(true)   
-    setCurrentdate(date)                      
-    setMonth(varmonth),setDay(monthfirstday);var ob={}
-    var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
-    ob[date] = {
-      disabled: true,  
-      disabledbackcolor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
-    };
-
-     setMarkeddates({...marks,...ob}) 
-     setTimeout(() => {
-      setLoading(false)
-     }, 100);
+   
+    var selectedMonthData=e[0]
+     console.log('month changed:'+selectedMonthData.month)
+    setDay(selectedMonthData.day)
+    setMonth(selectedMonthData.month)
+    setYear(selectedMonthData.year)
+    getmonthdata(selectedMonthData.year,selectedMonthData.month)
+    NewDaySelected(selectedMonthData.day,selectedMonthData.month)
+    // var varmonth=(e[0].month===12 && e[0].year===2020)?12:(e[0].month===1 && e[0].year===2022)?1:e[0].month;
+    // var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
+    // if(month!=e[0].month)
+    //  setLoading(true)   
+    // setCurrentdate(date)                      
+    // setMonth(varmonth),setDay(monthfirstday);var ob={}
+    // var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
+    // ob[date] = {
+    //   disabled: true,  
+    //   disabledbackcolor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
+    // };
+    //  setMarkeddates({...marks,...ob}) 
+    //  setTimeout(() => {
+    //   setLoading(false)
+    //  }, 100);
     
 //  }
 }
