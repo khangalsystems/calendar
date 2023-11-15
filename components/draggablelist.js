@@ -11,44 +11,41 @@ import { FlatList } from "react-native";
 const screen_height=Dimensions.get('window').height
 const list_item=screen_height>690?60:50
 export default function draggeble(props) {
-    const [data,setData]=useState(props.data)
     const [data2,setData2]=useState(props.data2)   
     const [playing, setPlaying] = useState(false)
-    const [sound, setSound] = React.useState();
     const flatListRef = React.useRef()
-  
-    async function playsound(eng){
-      if(!playing)
-      {
-               setPlaying(true)
-                try
-                 {
-                  const { sound: playbackObject } = await Audio.Sound.createAsync(
-                    Paths[eng]
-                  );
-                  playbackObject.playAsync();
-                  playbackObject.setOnPlaybackStatusUpdate(playbackStatus =>{
-  
-                        if (playbackStatus.didJustFinish && !playbackStatus.isLooping) {
-                          setPlaying(false)
-                         // setLastplayed(i)
-                        }
-                     })
+      async function playsound(eng){
+        if(!playing)
+        {
+                setPlaying(true)
+                  try
+                  {
+                    const { sound: playbackObject } = await Audio.Sound.createAsync(
+                      Paths[eng]
+                    );
+                    playbackObject.playAsync();
+                    playbackObject.setOnPlaybackStatusUpdate(playbackStatus =>{
+    
+                          if (playbackStatus.didJustFinish && !playbackStatus.isLooping) {
+                            setPlaying(false)
+                          // setLastplayed(i)
+                          }
+                      })
+                      }
+                    catch(e){
+                      console.log('error'+e);
+                      Toast.show('Дуу алга байна !',{
+                        position: Toast.position.center,
+                        containerStyle:{width:'90%',backgroundColor:'#ff9966'},
+                        textStyle: {},      
+                        mask: true,
+                        maskStyle:{},
+                        });
+                        setPlaying(false);
                     }
-                   catch(e){
-                     console.log('error'+e);
-                     Toast.show('Дуу алга байна !',{
-                       position: Toast.position.center,
-                       containerStyle:{width:'90%',backgroundColor:'#ff9966'},
-                       textStyle: {},      
-                       mask: true,
-                       maskStyle:{},
-                       });
-                      setPlaying(false);
-                   }
-       
+        
+        }
       }
-    }
       function renderItem( item, index, drag, isActive){
         return (
           <TouchableOpacity
@@ -110,18 +107,15 @@ export default function draggeble(props) {
         );
       };
   return (
-    <View style={{borderRadius:20,flexDirection:'row',borderRadius:20,width:Dimensions.get('window').width-30,marginHorizontal:15,height:Dimensions.get('window').height-200,justifyContent:'center',alignItems:'center',backgroundColor:'transparent'}}>
-
-         <View style={{flexDirection:'row',width:'100%',height:'auto',backgroundColor:'transparent',borderRadius:20}}>
+      <View style={{borderRadius:20,flexDirection:'row',marginTop:10,borderRadius:20,width:'100%',marginHorizontal:15,height:'auto',justifyContent:'center',alignItems:'center',backgroundColor:'transparent'}}>
                <FlatList
-                data={data}
+                data={props.data}
                 scrollEnabled={false}
                 dragItemOverflow={false}
                 style={{borderRadius:20}}
                 renderItem={({ item, index})=>renderItem2(item, index)}
-                keyExtractor={(item, index) => `kr-${item.eng}${index} `}
+                keyExtractor={(item, index) => `key-${item.index}`}
                 />
-                
                 <DraggableFlatList
                   data={data2}
                   scrollEnabled={false}
@@ -130,54 +124,20 @@ export default function draggeble(props) {
                   alwaysBounceVertical={false}
                   style={{borderRadius:20}}
                   renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive)}
-                  keyExtractor={(item, index) => `kr-${item.eng}${index} `}
+                  keyExtractor={(item, index) => `${item.index}`}
                   onDragEnd={({ data,from,to }) =>{change(from,to)}}
-                  />
-            </View>
-                       
+                  />           
         </View>
   );
   function change(from,to)
-  {
-      
+  {   
       var newData=[...data2]
       var i=newData[from];
       newData[from]=newData[to];
       newData[to]=i;
       newData[to].dragged=true;
-      console.log(newData)
       setData2(newData)
       props.changedata2(newData)
   }
-}
 
-const styles = StyleSheet.create({
-  container: {
-    height:60,
-    justifyContent:'center',
-    width:'100%',
-    alignItems:'center',
-    backgroundColor:'grey'
-  },
-  Modal:{
-    alignSelf:"center",
-    height:'auto',
-    backgroundColor: "#fff",
-    paddingTop:25,
-    paddingBottom: 5,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius:10,
-    borderColor: "rgba(0, 0, 0, 0.1)",
-    width:250,
-    position: 'relative'
-  },
-  modalOverlay: {
-    position: 'absolute',
-    alignSelf:'center',
-    width:Dimensions.get('window').width, 
-    height:Dimensions.get('window').height, 
-    backgroundColor: 'rgba(0,0,0,0.1)'
-  },
- 
-});
+}

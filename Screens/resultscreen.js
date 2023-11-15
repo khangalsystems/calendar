@@ -6,7 +6,7 @@ import { AntDesign,Entypo,FontAwesome5} from '@expo/vector-icons';
 const screen_height=Dimensions.get('window').height
 const list_item=screen_height>600?60:50
 export default function Result({navigation,route}) {
-     
+     console.log(route.params.data2)
      function renderItem( item, index, drag, isActive){
         return (
           <View
@@ -72,7 +72,6 @@ export default function Result({navigation,route}) {
         );
       };
   const checkAndNavigate=()=>{
-    route.params.checkalert()
     navigation.navigate('Month',{day:route.params.day,month:route.params.month,year:route.params.year});
   }
   return (

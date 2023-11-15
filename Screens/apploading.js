@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import * as SQLite from 'expo-sqlite'
 import * as FileSystem from 'expo-file-system'
-import Appjson from "../app.json";
 import AllService from '../services/allservice';
 import config from '../config.json'
 import Modal from "react-native-modal";
@@ -28,7 +27,7 @@ export default function Prefering(props) {
   
   
   async function _bootstrapAsync(){
-    console.log('apploading.2.')
+    console.log('apploading.22.')
   db.transaction(tx=>{
     db.transaction(tx=>{
       tx.executeSql('select * from info',
@@ -63,7 +62,8 @@ export default function Prefering(props) {
     },
     (err)=>{console.log('err')},
     (succ)=>{console.log('succ')}
-  )             
+  )
+           
   })}
   async function checkbase()
            {
@@ -148,29 +148,11 @@ export default function Prefering(props) {
                                }));
                             })
                             bar.then(()=>{
-                              // props.navigation.dispatch(
-                              //   CommonActions.reset({
-                              //     index: 0,
-                              //     routes: [
-                              //       {
-                              //         name:props.data.screen,  
-                              //         params: {
-                              //           id: props.data.id,
-                              //         },                     
-                              //       },
-                              //     ],
-                              //   })
-                              // );
-                        
-                              props.navigation.navigate('Home',{screen:'Main',params:{id:props.route.params.id,page:props.route.params.screen}})
-
-                             
+                              props.navigation.navigate('Home',{screen:'Main'})
                             }) 
                            
                        }) 
-                     }).catch(e=>{console.log(e),
-                    
-                      props.navigation.navigate('Home',{screen:'Main',params:{id:props.route.params.id,page:props.route.params.screen}})})                
+                     }).catch(e=>{console.log(e),props.navigation.navigate('Home',{screen:'Main'})})                
               }
               ,(transact,err) => console.log('error occured ', err)
         );
@@ -216,16 +198,12 @@ export default function Prefering(props) {
                   }).catch(err=>{console.log('about err2'+err)})
                 }
             )})
-    service.SaveAppStart(data.userid,Appjson.expo.version).then(result=>result.json()).then(res=>console.log('saved ++'+res)).catch(()=>{console.log('no internet')})
+        //service.SaveAppStart(data.userid,Appjson.expo.version).then(result=>result.json()).then(res=>console.log('saved ++'+res)).catch(()=>{console.log('no internet')})
   }
   async function update(){
     console.log('updateing')
-    var d = new Date();
-    var month = d.getMonth() + 1; 
-    var year = d.getFullYear();
     let service = new AllService();
     const result=await service.GetAbout().then(result=>result.json())
-    //.then(result=>result.json()).then( result=>{
     const query = `insert into companyinfo2(mail,facebookurl,address,about,trialtext,phone,date) values ('${result.mail}','${result.facebookurl}','${result.address}','${result.about}','${result.trialText}','${result.phone}','${result.updateognoo}');`;
     db.transaction(trx => {
           execQuery(trx,query).then(async e=>{
@@ -240,22 +218,7 @@ export default function Prefering(props) {
                 }); 
           })
     },(err)=>console.log("err tx:"+err))
-  
-      
-    // }).catch(e=>{console.log(e)})  
-  
-    //   await service.GetCalendarWords(0).then(result=>result.json()).then(async result=>{
-    //   await result.forEach(async el => {
-    //                 var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
-    //                 db.transaction(async (tx)=>{
-    //                   tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
-    //                   },(tx,result)=>{
-    //                   console.log(result);
-    //                 })
-    //                 })                          
-    //   }); 
-    // }).catch(err=>console.log('getting words err'+err))
-      db.transaction((tx)=>{
+    db.transaction((tx)=>{
                           service.Getreklams(0,0).then(result=>result.json())
                           .then(result=>{              
                             var allnews=result.map(news=>{
@@ -297,7 +260,9 @@ export default function Prefering(props) {
                                   });
       
                               }) 
-                            }).catch(e=>{console.log(e),props.navigation.navigate('Home',{screen:'Monthscreen'})})
+                            }).catch(e=>{
+                              props.navigation.navigate('Home',{screen:'Monthscreen'})
+                            })
                       
                       })
 

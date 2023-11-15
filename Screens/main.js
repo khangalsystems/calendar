@@ -6,14 +6,18 @@ import * as SQLite from 'expo-sqlite'
 import Month from '../components/month.js';
 
 import HeaderMain from '../components/headermain';
-import { CommonActions } from '@react-navigation/native';
 import Loader from '../components/Loader';
 import config from '../config.json'
 import { daysInMonth } from '../functions/daysInMonth.js';
 import dayjs from 'dayjs';
+import { useDispatch, useSelector } from 'react-redux';
+import { getMarks } from '../store/selector';
+import { setMarks } from '../store/reducer';
 const db=SQLite.openDatabase(config.basename)
 export default function Main({route,navigation}) {
   let date=new Date();
+  const dispatch=useDispatch()
+  const marks=useSelector(getMarks)
   let nowyear=date.getFullYear()-1
   const yeardata= [{
     year:nowyear,
@@ -57,59 +61,15 @@ export default function Main({route,navigation}) {
   const [loading,setLoading]=useState(true)
   const [subdata,setSubdata]=useState([])
 
-const refreshmonth=()=>{
-  async function filldata(){
-   
 
-var lastdata=[]
-for await(const year of yeardata)
-{
-var y=year.year ;
-var monthdata=[];
-var mo=1;
-for await(const month of year.month)
-{
-      
-      var days=[]
-      var amralt=0;
-      for await(const day of month.days)
-      {
-        amralt++;
-                        var date=`${year.year}-${mo<10?'0'+mo:mo}-${day<10?'0'+day:day}`;
-                        var sql='select * from dayscore2 where date="'+date+'"';                    
-                        days.push(await executeSql(sql,day,month.m,amralt))
-                        if(amralt==7) amralt=0;
-                        
-
-      }
-      mo++;
-      monthdata.push({m:month.m,color:month.color,color2:month.color2,days:days})
-}
-  lastdata.push({year:y,month:monthdata})
-}
-setSubdata(lastdata) 
-  }
-filldata();
-}
   useEffect(() => {  
-
     var nowDate =dayjs();
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [
-           { 
-             name: 'Home',
-           } 
-                  
-        ],
-      })
-    );
-   
-    navigation.navigate('Month',{'month':nowDate.month()+1,'year':nowDate.year()-1,'day':nowDate.date(),refreshmonth:()=>refreshmonth()})
+    navigation.navigate('Month',{month:nowDate.month()+1,year:nowDate.year()-1,day:nowDate.date()})
     firstrefresh();
   },[])
-
+  useEffect(()=>{
+     filldata()
+  },[marks])
   async function executeSql(sql,d,m,amralt){
       return new Promise((resolve, reject) =>db.transaction(tx => {
        tx.executeSql(sql, [], (_, { rows }) => {
@@ -125,51 +85,53 @@ filldata();
   function changemonth(y,m,color){
       var date=new Date();
       //console.log({'color':color,'month':m,'year':y,'day':(m==date.getMonth()+1?date.getDate():1)})
-      navigation.navigate('Month',{'color':color,'month':parseInt(m),'year':y,'day':(m==date.getMonth()+1?date.getDate():1),refreshmonth:refreshmonth()})
+      navigation.navigate('Month',{'color':color,'month':parseInt(m),'year':y,'day':(m==date.getMonth()+1?date.getDate():1)})
   }
 
   function firstrefresh(){  
     if(subdata.length===0){
-    async function filldata(){
-      
-  var lastdata=[]
-  for await(const year of yeardata)
-  {
-  var y=year.year ;
-  var monthdata=[];
-  var mo=1;
-  for await(const month of year.month)
-  {
-        
-        var days=[]
-        var amralt=0;
-        for await(const day of month.days)
-        {
-          amralt++;
-                          var date=`${year.year}-${mo<10?'0'+mo:mo}-${day<10?'0'+day:day}`;
-                          var sql='select * from dayscore2 where date="'+date+'"';  
-                                            
-                          days.push(await executeSql(sql,day,month.m,amralt))
-                          if(amralt==7) amralt=0;
-                          
-  
-        }
-        mo++;
-        monthdata.push({m:month.m,color:month.color,color2:month.color2,days:days})
-  }
-    lastdata.push({year:y,month:monthdata})
-  }
-  setSubdata(lastdata) 
-    }
      filldata();
-     setLoading(false)
-    }
-    else{
-      // if(alwaysalert)
-      //   setShowalert(true)
     }
   }
-
+  async function filldata(){
+      
+          var lastdata=[],reduxData={}
+          for(const year of yeardata)
+          {
+              var y=year.year ;
+              var monthdata=[];
+              var mo=1;
+                for(const month of year.month)
+                {
+                      
+                      var days=[]
+                      var amralt=0;
+                      for(const day of month.days)
+                      {
+                        amralt++;
+                                        var date=`${year.year}-${String(mo).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                                        var sql='select * from dayscore2 where date="'+date+'"';  
+                                        var dayObject=await executeSql(sql,day,month.m,amralt)                         
+                                        days.push(dayObject)
+                                        var redob={...dayObject}
+                                        if(redob.amralt)
+                                        {
+                                          redob.selected=true
+                                          redob.selectedColor=month.color2
+                                          reduxData[date]=redob
+                                        }
+                                        if(amralt==7) amralt=0;
+                                        
+                
+                      }
+                      mo++;
+                      monthdata.push({m:month.m,color:month.color,color2:month.color2,days:days})
+                }
+            lastdata.push({year:y,month:monthdata})
+          }
+       dispatch(setMarks(reduxData))
+       setSubdata(lastdata) 
+    }
     return (
       <ImageBackground source={require('../assets/back1.png')} imageStyle={{opacity:1}} resizeMode='cover'  style={styles.container} >        
        <HeaderMain navigation={navigation} />  

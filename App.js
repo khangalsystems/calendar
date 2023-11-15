@@ -27,6 +27,8 @@ import Phone from './screens/phone';
 import "react-native-gesture-handler";
 import config from './config.json'
 import { execQuery } from './functions/execQuery';
+import { Provider } from 'react-redux';
+import store from './store/store';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -158,6 +160,7 @@ const Drawer = createDrawerNavigator();
     )
   else{
       return (
+        <Provider store={store}>
             <NavigationContainer >
                 <Drawer.Navigator   screenOptions={{headerShown:false}}  initialRouteName='Apploading'  drawerStyle={{backgroundColor:'#fff',width:Dimensions.get('window').width/1.6}}  drawerContent={(props) => <Drawerscreen {...props} />}  drawerType={Dimensions.width >= 768 ? 'permanent' : 'front'} >  
                     <Drawer.Screen options={{headerShown:false}} name="Apploading"  component={Prefering} />
@@ -170,7 +173,7 @@ const Drawer = createDrawerNavigator();
                     <Drawer.Screen options={{headerShown:false}} name="Phone"  component={Phone} />
                 </Drawer.Navigator>
             </NavigationContainer>
-    
+            </Provider>
     
       )}
   }

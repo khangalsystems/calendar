@@ -1,114 +1,69 @@
 
 import React,{useState,useEffect,useRef} from 'react';
 import { Dimensions, StyleSheet, Text,ActivityIndicator,View,ScrollView } from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
 import { AntDesign } from '@expo/vector-icons'; 
 import * as SQLite from 'expo-sqlite'
 import { Audio } from 'expo-av';
-import Carousel from 'react-native-snap-carousel';
+import Carousel from 'react-native-snap-carousel-v4';
 import Loader from './Loader';
 import Toast from 'react-native-tiny-toast'
 import {  TouchableOpacity } from 'react-native-gesture-handler';
 import config from '../config.json'
 import {Paths}from '../assets/list.js';
+import dayjs from 'dayjs';
 const db=SQLite.openDatabase(config.basename)
 var rreef;
-export default function words(props) {
-   const net=NetInfo.useNetInfo();
+export default function words({currentDate,changeParentDay}) {
    const [words, setWords] = useState([])
-   const [index, setIndex] = useState(1)
    const [loading, setLoading] = useState(false)
    const [playing, setPlaying] = useState(-1)
    const [lastplayed, setLastplayed] = useState(-1)
    useEffect(() => {
     _askForAudioPermission();
     setLoading(true)
-     var date0='';
-     if((props.day-1)===0)
-     {
-       var last=new Date(props.year,(props.month-1),0).getDate()
-       date0=''+props.year+'-'+(props.month-1<10?'0'+(props.month-1):(props.month-1))+'-'+last+'';
-     }
-     else{
-         date0=''+props.year+'-'+(props.month<10?'0'+props.month:props.month)+'-'+((props.day-1)<10?'0'+(props.day-1):(props.day-1))+'';
-     }
-     var date=''+props.year+'-'+(props.month<10?'0'+props.month:props.month)+'-'+(props.day<10?'0'+props.day:props.day)+'';
-     var date2='';
-     var last2=new Date(props.year,props.month,0).getDate()
-     if(props.day===last2)
-     {      
-       date2=''+props.year+'-'+(props.month+1<10?'0'+(props.month+1):(props.month+1))+'-01';
-     }
-     else{
-       date2=''+props.year+'-'+(props.month<10?'0'+props.month:props.month)+'-'+((props.day+1)<10?'0'+(props.day+1):(props.day+1))+'';
-     }
-
+     var prevDate=dayjs(currentDate).add(-1,'day');
+     var nextDate=dayjs(currentDate).add(1,'day');
      var data=[]  
-    
      db.transaction(
             tx => {
-              var qr='select * from D03 where D0304="'+date0+'"';          
+              var qr='select * from D03 where D0304="'+prevDate+'"';          
               tx.executeSql(qr, [], async (trans, result) => {              
-                var data1=await result.rows._array.map(e=>{                
-                 return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305,day:props.day-1}}) 
+                var data1=result.rows._array.map(e=>{                
+                 return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305}}) 
                  db.transaction(
                   tx => {
-                    var qr='select * from D03 where D0304="'+date+'"';          
+                    var qr='select * from D03 where D0304="'+currentDate+'"';          
                     tx.executeSql(qr, [], async (trans, result) => { 
-                      var data2=await result.rows._array.map(e=>{                
-                       return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305,day:props.day}}) 
-                      
+                      var data2=result.rows._array.map(e=>{                
+                       return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305}}) 
                        db.transaction(
                         tx => {
-                          var qr='select * from D03 where D0304="'+date2+'"';          
+                          var qr='select * from D03 where D0304="'+nextDate+'"';          
                           tx.executeSql(qr, [], async (trans, result) => { 
-                            var data3=await result.rows._array.map(e=>{                
-                             return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305,day:props.day+1}}) 
+                            var data3=result.rows._array.map(e=>{                
+                             return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305}}) 
                               data.push(data1)
                               data.push(data2)
                               if(data3.length>0)
                                  data.push(data3)
                               setWords(data)                                               
                               if(rreef!=null) 
-                                {rreef.snapToItem (1,false)
-                                }
+                                rreef.snapToItem (1,false)
                                setLoading(false)
                                },(tx,res)=>{console.log(res)});            
-                                      
-                            
                               })
-                       
                          },(tx,res)=>{console.log(res)});            
-                                
-                      
                         })
-
-
                    },(tx,res)=>{console.log(res)});            
-                          
-                
                   })
-                 
-   }, [props.day,props.month])
+   }, [currentDate])
 
    async function playsound(req,i){
-    
       if(playing==-1)
       {
             setPlaying(i)
             setLastplayed(i)
              try{
-                // const audioMale = new Audio.Sound();
-                // await audioMale.loadAsync(Paths[req.eng])
-                // await audioMale.playFromPositionAsync();
-                // await audioMale.playAsync().then(e=>{
-                //   audioMale.unloadAsync();
-                // });
-                // //audioMale._lastStatusUpdate()
-                // //await audioMale.replayAsync();
-                // setPlaying(-1)
-                // setLastplayed(i)
-                
                 const { sound: playbackObject } = await Audio.Sound.createAsync(
                   Paths[req.eng]
                 );
@@ -134,39 +89,34 @@ export default function words(props) {
       }
      
    }
-   //<Text>{`${props.year}-${props.month<10?'0'+props.month:props.month}-${props.day<10?'0'+props.day:props.day} Цээжлэх үгнүүд`}</Text> 
-//    <View style={styles.colheader}>
-//    <Text style={[styles.headerwords,{width:'10%'}]}>{' '}</Text>
-//    <Text style={[styles.headerwords,{width:'40%'}]}>{'Англи'}</Text>
-//    <Text style={[styles.headerwords,{width:'40%'}]}>{'Монгол'}</Text>         
-// </View>
- async function  _askForAudioPermission (){
-    const response = await Audio.requestPermissionsAsync();  
-  };
- 
+    async function  _askForAudioPermission (){
+      const response = await Audio.requestPermissionsAsync();  
+    };
+   const changeDay=(e)=>{
+    console.log(e)
+    var newDate=dayjs(currentDate)
+    if(e)
+    newDate.add(-1,'day')
+    else newDate.add(1,'day')
+    changeParentDay(newDate.format('YYYY-MM-DD'))
+   }
         return (
     <View style={styles.container}>
      <View style={{backgroundColor:"#1cb1ed",width:'86%',height:25,borderRadius:10}}>
-        <Text style={{alignSelf:'center',fontFamily:"myfont",fontSize:16,color:'white',textAlign:'center',textAlignVertical:'center'}}>{''+props.year+'-'+(props.month<10?'0'+props.month:props.month)+'-'+(props.day<10?'0'+(props.day):(props.day))+' өдрийн цээжлэх үгс'}</Text>
+        <Text style={{alignSelf:'center',fontFamily:"myfont",fontSize:16,color:'white',textAlign:'center',textAlignVertical:'center'}}>{`${currentDate} өдрийн цээжлэх үгс`}</Text>
         </View>
         {words.length>0 && !loading? 
         <Carousel
-        ref={(c) => {rreef=c}}
-        data={words}
-        onSnapToItem={e=>{if(e!=1){props.changeday((e===2?props.day+1:props.day-1),props.month)}}}
-        renderItem={(e)=>_renderItem(e.item,e.index)}
-        sliderWidth={Dimensions.get('window').width}
-        firstItem={1}
-        itemWidth={Dimensions.get('window').width}
-      
-      />:
-      <ScrollView>
-         <View  style={{width:'100%',height:'auto',justifyContent:'center',marginHorizontal:0,backgroundColor:'transparent',borderRadius:10}}>    
+          ref={(c) => {rreef=c}}
+          data={words}
+          onSnapToItem={changeDay}
+          renderItem={(e)=>_renderItem(e.item,e.index)}
+          sliderWidth={Dimensions.get('window').width}
+          firstItem={1}
+          itemWidth={Dimensions.get('window').width} 
+      />:<View  style={{width:'100%',height:'auto',justifyContent:'center',marginHorizontal:0,backgroundColor:'transparent',borderRadius:10}}>    
                   <Loader/>
-      </View>
-     </ScrollView>}
-            
-        
+        </View>}
     </View>
   );
   function _renderItem (item, index) {
@@ -202,7 +152,7 @@ const styles = StyleSheet.create({
     justifyContent:'center',
     alignItems:'center',
     backgroundColor:'transparent',
-    marginTop:0,
+    marginTop:10,
     marginBottom:20
   },
   wordlist:{

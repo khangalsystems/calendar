@@ -12,6 +12,9 @@ import * as SecureStore from 'expo-secure-store';
 import config from '../config.json'
 import { daysInMonth } from '../functions/daysInMonth';
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
+import { getMarks } from '../store/selector';
+import { setMarks } from '../store/reducer';
 const db=SQLite.openDatabase(config.basename)
 LocaleConfig.locales['mn'] = {
   monthNames: ['1 сар','2 сар','3 сар','4 сар','5 сар','6 сар','7 сар','8 сар','9 сар','10 сар','11 сар','12 сар'],
@@ -22,73 +25,49 @@ LocaleConfig.locales['mn'] = {
 };
 LocaleConfig.defaultLocale = 'mn';
 const monthColors=[
-  {m:'01',color:'#1529d6'},
-  {m:'02',color:'#1529d6'},
-  {m:'03',color:'#ffc4ff'},
-  {m:'04',color:'#ffc4ff'},
-  {m:'05',color:'#ffc4ff'},
-  {m:'06',color:'#07a60c'},
-  {m:'07',color:'#07a60c'},
-  {m:'08',color:'#07a60c'},
-  {m:'09',color:'#c1c414'},
-  {m:'10',color:'#c1c414'},
-  {m:'11',color:'#c1c414'},
-  {m:'12',color:'#1529d6'}
+  {m:0,color:'#1529d6'},
+  {m:1,color:'#1529d6'},
+  {m:2,color:'#1529d6'},
+  {m:3,color:'#ffc4ff'},
+  {m:4,color:'#ffc4ff'},
+  {m:5,color:'#ffc4ff'},
+  {m:6,color:'#07a60c'},
+  {m:7,color:'#07a60c'},
+  {m:8,color:'#07a60c'},
+  {m:9,color:'#c1c414'},
+  {m:10,color:'#c1c414'},
+  {m:11,color:'#c1c414'},
+  {m:12,color:'#1529d6'}
  ]
  const Monthscreen = ({navigation,route}) => {
   let date=dayjs();
-  let nowyear=date.year()-1
+  const storedMarks=useSelector(getMarks)
   const modalwidth=Dimensions.get('window').width-100;
   const [modal,setModal]=useState(false)
   const [loading,setLoading]=useState(true)
-  const [loadedmonths,setLoadedmonths]=useState([])
-  const [activeDateString,setActiveDateString]=useState(date.format('YYYY-MM-DD'))
   const [currentdate, setCurrentdate] = useState('')
   const [day, setDay] = useState(route.params.day?route.params.day:date.date())
   const [month, setMonth] = useState(0)
   const [year, setYear] = useState(0)
-  const [monthfirstday, setMontfirstday] = useState(1)
-  const [firstdate, setFirstdate] = useState('')
-  const [lastdate, setLastdate] = useState('')
   const [showalert, setShowalert] = useState(false)
   const [remain, setRemain] = useState(0)
   const [middletext,setMiddletext]=useState(' ')
   const [succtoken, setSucctoken] = useState(false)
   const [expired, setExpired] = useState(false)
-  const [marks,setMarks]=useState({})
-  const [markeddates,setMarkeddates]=useState({})
-  function fillmarks(){
-     setLoading(true)
+  const [marks,changeMarks] = useState(storedMarks)
+
+  function fillmarks(year,month,day){
      checkalert()
-     getmonthdata(route.params.year,route.params.month);
+     setDay(day)
+     setMonth(month)
+     setYear(year)
      var date=''+route.params.year+'-'+String(route.params.month).padStart(2,"0")+'-'+String(route.params.day).padStart(2,"0"); 
-     setMontfirstday(route.params.day)
      setCurrentdate(date)
-     setDay(route.params.day)
-     setMonth(route.params.month)
-     NewDaySelected(route.params.day,route.params.month)
-     //fillVacationDays(route.params.year,route.params.month)
-     setYear(route.params.year)
-     setLoading(false)
+     setLoading(false) 
   }
  useEffect(() => {
-    fillmarks()
+    fillmarks(route.params.year,route.params.month,route.params.day)
  }, [route.params.year,route.params.month])//route.params.day
-
-
-  const fillVacationDays=(year,month)=>{
-      var days={}
-      var color=monthColors.find(a=>a.m==month).color
-      var getTot=daysInMonth(parseInt(month),year);
-      for(var i=1;i<=getTot;i++){ 
-          var fdate = new Date(`${nowyear}-${month}-${i<10?'0'+i:i}`).getDay()   //looping through days in month
-          if(fdate==0 || fdate==6)
-          {           
-              days[`${nowyear}-${String(month).padStart(2,"0")}-${String(i).padStart(2,"0")}`]={selected: true,selectedColor:color,amralt:true  }   
-          }  
-        }
-      return days 
-  }
   const checkalert=async ()=>
   {
     return
@@ -126,128 +105,34 @@ const monthColors=[
         } 
         else {setShowalert(false),setSucctoken(true)}
   }
-  function  NewDaySelected (day,monthvar){
+  function NewDaySelected (day,monthvar){
     console.log('day changed:'+day,monthvar)
-     var date=route.params.year+'-'+(String(monthvar).padStart(2,'0'))+'-'+(String(day).padStart(2,'0'));
-     setCurrentdate(date)
-      var oldMarks={...marks}
-    oldMarks[date] = {
-      selected: true,  
-      selectedColor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
-    };
-    setMarkeddates(oldMarks)  
+    var date=route.params.year+'-'+(String(monthvar).padStart(2,'0'))+'-'+(String(day).padStart(2,'0'));
+    setCurrentdate(date)
     setDay(day)
     setMonth(monthvar)
   };
-  function getmonthdata(year,month){
-    setLoading(true)
-    const query = `select * from dayscore2 where year=(?) and month=(?)`;
-    db.transaction(trx => {
-        let trxQuery = trx.executeSql(
-             query
-            ,[year,month]
-            ,(transact,resultset) =>{ 
-              let newDaysObject = fillVacationDays(year,month);
-              resultset.rows._array.forEach((daydata) => {
-                newDaysObject[daydata.date] = {
-                  selected: true,
-                  selectedColor: daydata.scorecolor,            
-                };
-              });
-              setMarks(newDaysObject);
-              setMarkeddates(newDaysObject);
-              setLoading(false)
-            }
-            ,(transact,err) => console.log('error occured ', err)
-       );
-    })
-
-  }
   const gohome=()=>navigation.goBack()
   const relogin=()=>{
     setShowalert(false);
     navigation.navigate('Barcode',{'closeit':()=>{setShowalert(true)},'succ':()=>{setShowalert(false),setSucctoken(true)} });
   }
   const openmodal=()=>{
-    var date=''+route.params.year+'-'+(month<10?'0'+month:month)+'-'+(day<10?'0'+day:day)+'';
-    setCurrentdate(date)
-    var d = new Date(""+route.params.year+"-"+(month<10?'0'+month:month)+"-"+(day<10?'0'+day:day)+"");
-    //var weekday=d.getDay()+1;
-    var firstday=(day-1)
-    var currmonlastday = new Date(route.params.year, month, 0).getDate();
-    var lastday=(day+1)
-    if(firstday<=0)
-    {
-      var LastDayPrevMonth = new Date(route.params.year, month-1, 0).getDate();
-      firstday=LastDayPrevMonth-(firstday*-1)
-
-      var mo=month-1;
-      if(mo==0)
-          setFirstdate(`${route.params.year}-${month<10?'0'+month:month}-${'01'}`)
-      else 
-      {
-          setFirstdate(`${route.params.year}-${mo<10?'0'+mo:mo}-${firstday<10?'0'+firstday:firstday}`)
-      }
-    }
-    else{
-      setFirstdate(`${route.params.year}-${month<10?'0'+month:month}-${firstday<10?'0'+firstday:firstday}`)
-    }
-    
-    if(lastday>currmonlastday)
-    {
-      if((month+1)>12)
-      {
-         lastday=currmonlastday
-         setLastdate(`${route.params.year}-${month<10?'0'+month:month}-${lastday<10?'0'+lastday:lastday}`)
-      }
-      else{
-         var zuruu=lastday-currmonlastday;
-         setLastdate(`${route.params.year}-${(month+1)<10?'0'+(month+1):(month+1)}-${zuruu<10?'0'+zuruu:zuruu}`)
-      }
-    }
-    else{
-       setLastdate(`${route.params.year}-${month<10?'0'+month:month}-${lastday<10?'0'+lastday:lastday}`)
-    }
-    
-   
-
-    //setLastdate(`${route.params.year}-${month<10?'0'+month:month}-${lastday<10?'0'+lastday:lastday}`)
     setModal(true)
   } 
-  const refresh=(dayfr)=>{
-    var refres=route.params.refreshmonth;
-    refres()
-    getmonthdata(route.params.year,route.params.month);
-  }
   const navigate1=()=>{
     setModal(false)
-    navigation.navigate('Exam',{day:day,month:month,year:route.params.year,refresh:(e)=>refresh(e),checkalert:checkalert})
+    navigation.navigate('Exam',{day:day,month:month,year:route.params.year})
   }
   const navigateVoice=()=>{
     setModal(false)
-    navigation.navigate('Examvoice',{'day':day,'month':month,"year":route.params.year,refresh:(d)=>refresh(d),checkalert:()=>checkalert()})
+    navigation.navigate('Examvoice',{day:day,month:month,year:route.params.year})
   }
   const navigate7=()=>{
-     var wee='';
-     var weekdays=getDates()
-     weekdays.forEach(el => {
-       wee+='"'+el+'",';
-     }); 
-     wee = wee.substring(0, wee.length - 1);
     setModal(false)
-    navigation.navigate('Exam7',{'day':day,'month':month,"year":route.params.year,'weekdays':wee,'firstdate':firstdate,'lastdate':lastdate,refresh:(d)=>refresh(d),checkalert:()=>checkalert()})
+    navigation.navigate('Exam7',{day:day,month:month,year:route.params.year,date:currentdate})
    }
-  const getDates=()=>{
-    var dateArray = [];
-    var currentDate = moment(firstdate);
-    var stopDate = moment(lastdate);
-    while (currentDate <= stopDate) {
-        dateArray.push( moment(currentDate).format('YYYY-MM-DD') )
-        currentDate = moment(currentDate).add(1, 'days');
-    }
-    return dateArray;
-  }
-  function renderArrow (direction) {
+  const renderArrow=(direction)=>{
     if(direction === 'left') {
         return <Ionicons name="ios-arrow-back" size={54} style={{zIndex:2}} color={'#1d79cf'} />
     } else {
@@ -255,32 +140,16 @@ const monthColors=[
     }
   }
   const onVisibleMonthsChange=e=>{
-   
+    setLoading(true)
     var selectedMonthData=e[0]
-     console.log('month changed:'+selectedMonthData.month)
-    setDay(selectedMonthData.day)
-    setMonth(selectedMonthData.month)
-    setYear(selectedMonthData.year)
-    getmonthdata(selectedMonthData.year,selectedMonthData.month)
-    NewDaySelected(selectedMonthData.day,selectedMonthData.month)
-    // var varmonth=(e[0].month===12 && e[0].year===2020)?12:(e[0].month===1 && e[0].year===2022)?1:e[0].month;
-    // var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
-    // if(month!=e[0].month)
-    //  setLoading(true)   
-    // setCurrentdate(date)                      
-    // setMonth(varmonth),setDay(monthfirstday);var ob={}
-    // var date=route.params.year+'-'+(varmonth<10?'0'+varmonth:varmonth)+'-'+(monthfirstday<10?'0'+monthfirstday:monthfirstday);
-    // ob[date] = {
-    //   disabled: true,  
-    //   disabledbackcolor:marks[date] && !marks[date].amralt ?marks[date].selectedColor:'#1cb1ed'           
-    // };
-    //  setMarkeddates({...marks,...ob}) 
-    //  setTimeout(() => {
-    //   setLoading(false)
-    //  }, 100);
-    
-//  }
+    var year=selectedMonthData.year,month=selectedMonthData.month,day=selectedMonthData.day
+    setDay(day)
+    setMonth(month)
+    setYear(year)
+    setCurrentdate(`${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`)
+    var oldMarks={...storedMarks}
 }
+ const changeCurrentDate=(e)=>setCurrentdate(e)
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch'  style={{flex:1}}>
        
@@ -292,15 +161,15 @@ const monthColors=[
             </TouchableOpacity>         
          
        <View  style={styles.container}>
-          {loading?<View style={{height:'auto',justifyContent:'center',alignItems:'center'}}><ActivityIndicator size={'large'} color={'#8be9f0'}/></View>:
+          {!loading&&
                 <CalendarList
                       hideArrows={false}
-                      markedDates={markeddates}                           
+                      markedDates={{...marks,[currentdate]:{selected:true,selectedColor:'#1cb1ed'}}}      
                       minDate={route.params.year+'-01-01'}
                       maxDate={route.params.year+'-12-31'}
                       current={currentdate}    
                       style={{height:345}}
-                      renderArrow={(e)=>renderArrow(e)} 
+                      renderArrow={renderArrow} 
                       monthFormat={"M сар"} 
                       firstDay={1}
                       horizontal
@@ -322,10 +191,11 @@ const monthColors=[
                       pagingEnabled
                       onDayPress={(e)=>{NewDaySelected(e.day,e.month)}}
                />
-           }
+            }
+           
        </View>
       
-       <Words year={year} month={month} day={day} changeday={(d,m)=>NewDaySelected(d,m)}/>
+       <Words currentDate={currentdate} changeParentDay={changeCurrentDate}/>
        
        <TouchableOpacity onPress={openmodal} style={{justifyContent:'center',alignItems:'center',position:'absolute',zIndex:2,width:80,height:80,borderRadius:50,backgroundColor:'#1cb1ed',bottom:10,right:10}}>
           <Text style={{textAlign:'center',flexWrap:'wrap',color:'white'}}>{'Шалгалт өгөх'}</Text>
@@ -338,16 +208,16 @@ const monthColors=[
                           
                           <View style={styles.Modal}>
                             <Text style={{color:'#1d79cf',marginTop:10,fontFamily:'myfont',fontSize:16}}>{'Тогтоосон үг бататгах'}</Text>
-                            <TouchableOpacity onPress={()=>navigate1()} style={{marginVertical:5,width:'80%',height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
+                            <TouchableOpacity onPress={navigate1} style={{marginVertical:5,width:'80%',height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
                                 <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',padding:10}}>{'1 өдрийн үгээр шалгах \n'+currentdate}</Text>      
 
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={()=>navigateVoice()} style={{marginVertical:5,width:'80%',height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
+                            <TouchableOpacity onPress={navigateVoice} style={{marginVertical:5,width:'80%',height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
                                 <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',height:'auto',padding:10}}>{'Сонсголоор  шалгалт өгөх \n '+currentdate+''}</Text>      
 
                             </TouchableOpacity>   
-                            <TouchableOpacity onPress={()=>navigate7()} style={{width:'90%',marginTop:5,height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
-                                <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',height:'auto',padding:10}}>{'3 өдрийн үгээр шалгах \n ('+firstdate+' -c '+lastdate+')'}</Text>      
+                            <TouchableOpacity onPress={navigate7} style={{width:'90%',marginTop:5,height:60,backgroundColor:'#1d79cf',borderRadius:20,justifyContent:'center',alignItems:'center'}}>
+                                <Text style={{fontFamily:'myfont',textAlign:'center',flexWrap:'wrap',color:'white',height:'auto',padding:10}}>{`3 өдрийн үгээр шалгах \n (${getRangeDate()})`}</Text>      
 
                             </TouchableOpacity>   
                               
@@ -378,7 +248,11 @@ const monthColors=[
                         </Modal> 
     </ImageBackground>
   );
-
+  function getRangeDate()
+  {
+    var  curDate=dayjs(currentdate)
+    return `${curDate.add(-1,'day').format('YYYY-MM-DD')}-c ${curDate.add(1,'day').format('YYYY-MM-DD')}`
+  }
 
  
 
