@@ -8,11 +8,11 @@ import { AntDesign } from '@expo/vector-icons';
 import Toast from 'react-native-tiny-toast'
 import {Paths}from '../assets/list.js';
 const screen_height=Dimensions.get('window').height
+const screen_width=Dimensions.get('window').width
+
 const list_item=screen_height>690?60:50
 
-export default function draggeble(props) {
-    const [data,setData]=useState(props.data)
-    const [data2,setData2]=useState(props.data2)   
+export default function draggeble({data,data2,changeData2}) { 
     const [playing, setPlaying] = useState(-1)
     const [sound, setSound] = React.useState();
     const [lastplayed, setLastplayed] = useState(-1)
@@ -104,11 +104,10 @@ export default function draggeble(props) {
         );
       };
   return (
-    <View style={{borderRadius:20,flexDirection:'row',borderRadius:20,width:Dimensions.get('window').width-30,marginHorizontal:15,height:Dimensions.get('window').height-200,justifyContent:'center',alignItems:'center',backgroundColor:'transparent'}}>
-         <View style={{flexDirection:'row',width:Dimensions.get('window').width-80,height:'auto',backgroundColor:'transparent',borderRadius:20}}>
+      <View style={{borderRadius:20,flexDirection:'row',marginTop:10,borderRadius:20,width:'100%',marginHorizontal:15,height:'auto',justifyContent:'center',alignItems:'center',backgroundColor:'transparent'}}>
             <DraggableFlatList
                 data={data}
-                style={{borderRadius:20}}
+                style={{borderRadius:20,width:screen_width/2}}
                 scrollEnabled={false}
                 renderItem={({ item, index})=>renderItem2(item, index)}
                 keyExtractor={(item, index) => `kr-${item.eng}${index} `}
@@ -119,12 +118,11 @@ export default function draggeble(props) {
                 scrollEnabled={false}
                 dragItemOverflow={false}
                 alwaysBounceVertical={false}
-                style={{borderRadius:20}}
+                style={{borderRadius:20,width:screen_width/2}}
                 renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive)}
                 keyExtractor={(item, index) => `kr-${item.eng}${index} `}
                 onDragEnd={({ data,from,to }) =>{change(data2,from,to)}}
                 />
-           </View>                    
         </View>
   );
   function change(data2,from,to)
@@ -133,8 +131,7 @@ export default function draggeble(props) {
       data2[from]=data2[to];
       data2[to]=i;
       data2[to].dragged=true;
-      setData2(data2)
-      props.changedata2(data2)
+      changeData2(data2)
   }
 }
 

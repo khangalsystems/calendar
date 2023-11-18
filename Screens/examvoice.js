@@ -18,12 +18,12 @@ export default function Examvoice({navigation,route}) {
       var date=''+route.params.year+'-'+(route.params.month<10?'0'+route.params.month:route.params.month)+'-'+(route.params.day<10?'0'+route.params.day:route.params.day)+'';
       db.transaction(
        tx => {
-         var qr='select * from D03 where D0304="'+date+'"';          
+         var qr='select * from word where date="'+date+'"';          
          tx.executeSql(qr, [],async (trans, result) => { 
           var tdat=result.rows._array.map( e=>{                
-            return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305,fail:0,dragged:false}})  
+            return {index:e.id,mong:e.mon,eng:e.eng,type:e.class,pron:e.audio,fail:0,dragged:false}})  
            var tdat2=result.rows._array.map( e=>{                
-              return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305,fail:0,dragged:false}})  
+              return {index:e.id,mong:e.mon,eng:e.eng,type:e.class,pron:e.audio,fail:0,dragged:false}})  
               setData(shuffleArray(tdat));            
               setData2(shuffleArray(tdat2));      
               },(tx,res)=>{console.log(res)});
@@ -51,34 +51,37 @@ export default function Examvoice({navigation,route}) {
  } 
   function checkresult(){
       
-    let tdata=data;
     let tdata2=data2;
     var fail=0;  
-    for(var i=0;i<tdata.length;i++)
+    for(var i=0;i<data.length;i++)
     {
-        if(tdata[i].eng!==tdata2[i].eng)
+        if(data[i].eng!=tdata2[i].eng)
            { 
-             tdata[i].fail=-1;tdata2[i].fail=-1;fail++;
+             data[i].fail=1;
+             tdata2[i].fail=1;
+             fail++;
            }
-      else { 
-           tdata[i].fail=1;tdata2[i].fail=1
+       else { 
+            data[i].fail=0;
+             tdata2[i].fail=0
            }        
     } 
+    var scoreColor=fail==0?'#13d436':fail<4?'#27e6e2':'#de480d'
+    
     var date2=`${route.params.year}-${route.params.month<10?'0'+route.params.month:route.params.month}-${route.params.day<10?'0'+route.params.day:route.params.day}`;
-
+    console.log('saving '+date2)
     db.transaction(trx => {
       let trxQuery = trx.executeSql(
           'delete from dayscore2 where date="'+date2+'"'
           ,[]
           ,(transact,resultset) =>{
-            const query = `insert into dayscore2 (date,score,scorecolor) values ('${date2}',${fail==0?2:fail<4?1:0},'${fail==0?'#13d436':fail<4?'#27e6e2':'#de480d'}');`;
+            const query = `insert into dayscore2 (date,score,scorecolor,year,month,day) values ('${date2}',${fail==0?2:fail<4?1:0},'${scoreColor}',${route.params.year},${route.params.month},${route.params.day});`;
             db.transaction(trx => {
                 let trxQuery = trx.executeSql(
                      query
                     ,[]
                     ,(transact,resultset) => {
-                      route.params.refresh(route.params.day);
-                      navigation.navigate('Resultvoice',{'data1':tdata,'data2':tdata2,checkalert:()=>route.params.checkalert(),'fail':fail,'day':route.params.day,'month':route.params.month,'year':route.params.year})
+                      navigation.navigate('Resultvoice',{data1:data,data2:tdata2,fail:fail,day:route.params.day,month:route.params.month,year:route.params.year})
                     
                     }
                     ,(transact,err) => console.log('error occured ', err)
@@ -91,16 +94,8 @@ export default function Examvoice({navigation,route}) {
    
 
   }
-  function changedata1(data1){
-    
-   
-         setData(data1)
-  }
-  function changedata2(data2){
-    
-    setData2(data2)
-   
-}
+
+  const changeData2=(data2)=> setData2(data2)
  
   var corref;
   return (
@@ -116,9 +111,9 @@ export default function Examvoice({navigation,route}) {
 
         </Text>
      </View>
-        {data2.length===0?null:
-          <DragglistVoice  data={data} data2={data2} day={route.params.day} changedata1={(data1)=>changedata1(data1)} changedata2={(data2)=>changedata2(data2)}/>}
-        <Text style={{textAlign:'center',fontSize:15,fontFamily:'myfont',color:'#1d79cf'}}>{'Англи үгний дуудлагын харалдаа мөрөнд тохирох Монгол үгийг зөөж байрлуулна уу'}</Text>
+        {data2.length===0?<ActivityIndicator/>:
+          <DragglistVoice  data={data} data2={data2} changeData2={changeData2}/>}
+        <Text style={{textAlign:'center',fontSize:15,marginTop:20,fontFamily:'myfont',color:'#1d79cf'}}>{'Англи үгний дуудлагын харалдаа мөрөнд тохирох Монгол үгийг зөөж байрлуулна уу'}</Text>
         <View style={{flexDirection:'row',width:'70%',marginTop:10,marginHorizontal:'20%',height:'auto',justifyContent:'center'}}>
                 <TouchableOpacity onPress={()=>checkresult(corref)}  style={{width:150,height:50,backgroundColor:'#7de89a',borderRadius:50,justifyContent:'center',alignItems:'center'}}>
                 {loading?<ActivityIndicator size={'small'} color={'grey'}/>:

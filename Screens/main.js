@@ -1,18 +1,18 @@
 
 import React,{useState,useRef,useEffect,createRef} from 'react';
 import { Dimensions, StyleSheet, Text, View,ScrollView,TouchableOpacity,ActivityIndicator,TouchableWithoutFeedback, ImageBackground} from 'react-native';
-import Banner from '../components/banner';
+import Banner from '../components/banner.js';
 import * as SQLite from 'expo-sqlite'
 import Month from '../components/month.js';
 
-import HeaderMain from '../components/headermain';
-import Loader from '../components/Loader';
+import HeaderMain from '../components/headermain.js';
+import Loader from '../components/Loader.js';
 import config from '../config.json'
 import { daysInMonth } from '../functions/daysInMonth.js';
 import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
-import { getMarks } from '../store/selector';
-import { setMarks } from '../store/reducer';
+import { getMarks } from '../store/selector.js';
+import { setMarks } from '../store/reducer.js';
 const db=SQLite.openDatabase(config.basename)
 export default function Main({route,navigation}) {
   let date=new Date();
@@ -118,7 +118,6 @@ export default function Main({route,navigation}) {
                                         {
                                           redob.selected=true
                                           redob.selectedColor=month.color2
-                                          reduxData[date]=redob
                                         }
                                         if(amralt==7) amralt=0;
                                         
@@ -129,7 +128,6 @@ export default function Main({route,navigation}) {
                 }
             lastdata.push({year:y,month:monthdata})
           }
-       dispatch(setMarks(reduxData))
        setSubdata(lastdata) 
     }
     return (

@@ -7,6 +7,7 @@ import {Paths}from '../assets/list.js';
 import { StyleSheet, Text, View,Dimensions,TouchableOpacity,ImageBackground} from 'react-native';
 import DraggableFlatList from "react-native-draggable-flatlist";
 import { AntDesign,Entypo,FontAwesome5} from '@expo/vector-icons'; 
+import { FlatList } from 'react-native';
 const screen_height=Dimensions.get('window').height
 const list_item=screen_height>600?60:50
 export default function ResultVoice({navigation,route}) {
@@ -43,12 +44,12 @@ export default function ResultVoice({navigation,route}) {
          }
          else{}
       }
-    function renderItem( item, index, drag, isActive,mongol){
+    function renderItem( item, index, drag, isActive){
         return (
           <View
             style={{
               height:list_item,
-              backgroundColor: item.fail===1?'green':item.fail===0?'white':'#de3a21',
+              backgroundColor: item.fail==0?'#29d668':'#e04e41',
               borderRadius: isActive ? 50 :0,
               borderBottomWidth:0.5,
               flexDirection:'row',
@@ -70,15 +71,15 @@ export default function ResultVoice({navigation,route}) {
                 fontSize:isActive ? 18 : 15,
               }} 
             >
-              {mongol?item.mong:item.eng}
+              {item.eng}
             </Text>
-            {item.fail===1?<FontAwesome5  tyle={{width:'20%',alignSelf:'center'}} name="smile" size={24} color="white" />:<Entypo name="emoji-sad" style={{width:'20%',alignSelf:'center'}} size={24} color="white" /> 
+             {item.fail===0?<FontAwesome5  tyle={{width:'20%',alignSelf:'center'}} name="smile" size={24} color="white" />:<Entypo name="emoji-sad" style={{width:'20%',alignSelf:'center'}} size={24} color="white" /> 
  
               }
           </View>
         );
       };
-      function renderItem2( item, index, drag, isActive,mongol){
+      function renderItem2( item, index, drag, isActive){
         return (
           <View
             style={{
@@ -114,19 +115,23 @@ export default function ResultVoice({navigation,route}) {
           </View>
         );
       };
+  const goToMonthScreen=()=>{
+     console.log({day:route.params.day,month:route.params.month,year:route.params.year})
+    navigation.navigate('Month',{day:route.params.day,month:route.params.month,year:route.params.year})
+  }
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch'  style={{flexDirection:'column',width:'100%',height:Dimensions.get('window').height-20,justifyContent:'center',alignItems:'center',backgroundColor:'white'}}>
        <Text style={{fontFamily:'myfont',color:'#1d79cf',marginBottom:20,fontSize:15}}>{`${route.params.year}-${route.params.month<10?'0'+route.params.month:route.params.month}-${route.params.day<10?'0'+route.params.day:route.params.day} ны Шалгалтын хариу`}</Text>
 
         <View style={{flexDirection:'row',width:Dimensions.get('window').width-30,height:'auto',backgroundColor:'white'}}>
-            <DraggableFlatList
+            <FlatList
                 data={route.params.data1}
                 renderItem={({ item, index, drag, isActive })=>renderItem2(item, index, drag, isActive,false)}
                 keyExtractor={(item, index) => `kr-${item.eng}${index} `}
                // onDragEnd={({ data }) =>{props.changedata1(data);setData(data)}}
                 />
                 <View style={{width:1,backgroundColor:'black'}}></View>
-                <DraggableFlatList
+                <FlatList
                 data={route.params.data2}        
                 renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive,true)}
                 keyExtractor={(item, index) => `kr-${item.mong}${index} `}
@@ -135,7 +140,7 @@ export default function ResultVoice({navigation,route}) {
         </View>  
 
          <Text style={{marginVertical:10,fontSize:15,textAlign:'center',fontFamily:'myfont',color:'#1d79cf'}}>{'Ta '+route.params.fail+' алдсан байна !'+(route.params.fail!=0?' Алдаагаа шалгаад дахин оролдоно уу':' Танд баяр хүргэе ')}</Text>   
-         <TouchableOpacity onPress={()=>{navigation.navigate('Month',{'day':route.params.day,'month':route.params.month}),route.params.checkalert()}} style={{width:150,height:40,backgroundColor:'#7de89a',borderRadius:50,justifyContent:'center',alignItems:'center'}}>
+         <TouchableOpacity onPress={goToMonthScreen} style={{width:150,height:40,backgroundColor:'#7de89a',borderRadius:50,justifyContent:'center',alignItems:'center'}}>
                          <Text style={{color:'white',fontFamily:'myfont'}}>{route.params.month+'-р сар руу Буцах '}</Text>
          </TouchableOpacity>              
    </ImageBackground>

@@ -26,22 +26,22 @@ export default function words({currentDate,changeParentDay}) {
      var data=[]  
      db.transaction(
             tx => {
-              var qr='select * from D03 where D0304="'+prevDate+'"';          
+              var qr='select * from word where date="'+prevDate+'"';          
               tx.executeSql(qr, [], async (trans, result) => {              
                 var data1=result.rows._array.map(e=>{                
-                 return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305}}) 
+                 return {index:e.id,mong:e.mon,eng:e.eng,type:e.class,pron:e.audio}}) 
                  db.transaction(
                   tx => {
-                    var qr='select * from D03 where D0304="'+currentDate+'"';          
+                    var qr='select * from word where date="'+currentDate+'"';          
                     tx.executeSql(qr, [], async (trans, result) => { 
                       var data2=result.rows._array.map(e=>{                
-                       return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305}}) 
+                       return {index:e.id,mong:e.mon,eng:e.eng,type:e.class,pron:e.audio}}) 
                        db.transaction(
                         tx => {
-                          var qr='select * from D03 where D0304="'+nextDate+'"';          
+                          var qr='select * from word where date="'+nextDate+'"';          
                           tx.executeSql(qr, [], async (trans, result) => { 
                             var data3=result.rows._array.map(e=>{                
-                             return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305}}) 
+                             return {index:e.id,mong:e.mon,eng:e.eng,type:e.class,pron:e.audio}}) 
                               data.push(data1)
                               data.push(data2)
                               if(data3.length>0)

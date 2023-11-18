@@ -259,7 +259,7 @@ export default function Settings(props) {
           var data=await SecureStore.getItemAsync('info');
           data=JSON.parse(data);
           setDownloading(true)    
-          var query="delete from D03";
+          var query="delete from word";
                   db.transaction((tx)=>{
                      tx.executeSql(query,[],(tx,result)=>{ 
                        console.log('base cleared')                      
@@ -270,9 +270,9 @@ export default function Settings(props) {
           
              await service.GetCalendarWords(data.token).then(result=>result.json()).then(async result=>{
              await result.forEach(async el => {
-                            var query="INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))";
-                            await db.transaction(async (tx)=>{
-                              await tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
+                            var query="INSERT INTO word VALUES ((?),(?),(?),(?),(?),(?))";
+                             db.transaction(async (tx)=>{
+                               tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
                               },(tx,result)=>{
                             })
                             })
@@ -282,7 +282,7 @@ export default function Settings(props) {
                
             }) 
             db.transaction((tx)=>{
-              var query="select count(*) from D03";
+              var query="select count(*) from word";
                tx.executeSql(query,[],async (tx,result)=>{ 
                   var data=await SecureStore.getItemAsync('info');
                   data=JSON.parse(data);

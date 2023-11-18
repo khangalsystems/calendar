@@ -116,7 +116,7 @@ const Drawer = createDrawerNavigator();
         then(e=>{ 
              console.log(e)
             db.transaction(async tx2 => {
-              execQuery(tx2,'CREATE TABLE IF NOT EXISTS  D03(D0300 integer, D0301 text, D0302 text,D0303 text,D0304 text,D0305 text,D0306 text,D0307 integer);').
+              execQuery(tx2,'CREATE TABLE IF NOT EXISTS  word(integer id,eng text, mon text,class text,date text,audio text);').
               then(e=>{
                   console.log(e)
                  db.transaction(async tx3 => {

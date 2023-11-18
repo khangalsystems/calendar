@@ -3,8 +3,10 @@ import React,{useState} from 'react';
 import { StyleSheet, Text,ActivityIndicator,View,Dimensions,TouchableOpacity,ImageBackground} from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Entypo,FontAwesome5} from '@expo/vector-icons'; 
+import dayjs from 'dayjs';
 export default function Result7({navigation,route}) {
   const [loading, setLoading] = useState(false)
+  const date = dayjs(route.params.date)
       function result(){
         var data1=route.params.data1;
         var data2=route.params.data2;
@@ -18,11 +20,11 @@ export default function Result7({navigation,route}) {
                       {data2[i].eng}
                     </Text>
                  </View>
-               <View style={[styles.item,{backgroundColor:data1[i].fail===1?'green':data1[i].fail===0?'white':'red',flexDirection:'row'}]}>
+               <View style={[styles.item,{backgroundColor:data1[i].fail===0?'green':'red',flexDirection:'row'}]}>
                       <Text style={[styles.text,{color:'white',width:'80%'}]}>
                       {data1[i].mong}
                     </Text>
-                    {data1[i].fail===1?<FontAwesome5  tyle={{width:'20%',alignSelf:'center'}} name="smile" size={24} color="white" />:<Entypo name="emoji-sad" style={{width:'20%',alignSelf:'center'}} size={24} color="black" /> 
+                    {data1[i].fail===0?<FontAwesome5  tyle={{width:'20%',alignSelf:'center'}} name="smile" size={24} color="white" />:<Entypo name="emoji-sad" style={{width:'20%',alignSelf:'center'}} size={24} color="white" /> 
  
                          }
                  </View>
@@ -43,7 +45,7 @@ export default function Result7({navigation,route}) {
         <Text style={{fontFamily:'myfont',marginVertical:20,color:'#1d79cf',fontSize:15,flexWrap:'wrap',width:'90%',textAlign:'center'}}>{'Ta '+route.params.fail+' алдсан байна !'}</Text>   
         <TouchableOpacity onPress={()=>{navigate()}} style={{width:150,height:45,borderRadius:10,backgroundColor:'#7de89a',justifyContent:'center',alignItems:'center'}}>
                          {loading?<ActivityIndicator size={'small'} color={'white'}/>
-                         :<Text style={{color:'white'}}>{route.params.month+'-р сар руу Буцах '}</Text>
+                         :<Text style={{color:'white'}}>{`${date.month()+1}-р сар руу Буцах `}</Text>
                          }
             </TouchableOpacity>              
    </ImageBackground>
@@ -51,8 +53,7 @@ export default function Result7({navigation,route}) {
   function navigate(){
     setLoading(true)
     setTimeout(() => {
-      navigation.navigate('Month',{'day':route.params.day,'month':route.params.month}),
-      route.params.checkalert()
+      navigation.navigate('Month',{'day':date.date(),'month':date.month()+1,year:date.year()}),
       setLoading(false)
     }, 1000);
     

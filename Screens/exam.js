@@ -17,15 +17,14 @@ export default function Exam({navigation,route}) {
     const dispatch=useDispatch()
     const [loading,setLoading]=useState(true)
     const [data2,setData2]=useState([])
-    const [modal,setModal]=useState(false)
     const date=`${route.params.year}-${(String(route.params.month).padStart(2,'0'))}-${(String(route.params.day).padStart(2,'0'))}`
   useEffect(() => {   
       db.transaction(
        tx => {
-         tx.executeSql(`select * from D03 where D0304='${date}'`
+         tx.executeSql(`select * from word where date='${date}'`
          , [],async (trans, result) => { 
               var tdat=result.rows._array.map( e=>{                
-                   return {index:e.D0300,mong:e.D0302,eng:e.D0301,type:e.D0303,pron:e.D0305,fail:0,dragged:false
+                   return {index:e.id,mong:e.mon,eng:e.eng,type:e.class,pron:e.audio,fail:0,dragged:false
                   }})  
                var tdat2=[...tdat]
                setData(shuffleArray(tdat));            
@@ -91,7 +90,7 @@ export default function Exam({navigation,route}) {
         );
       })
   }
- const changedata2=(data2)=>{console.log('data 2 changed..');setData2(data2)}
+ const changedata2=(data2)=>setData2(data2)
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch' style={{width:'100%',height:Dimensions.get('window').height}} >
         <View style={[styles.container,{backgroundColor:'transparent'}]}>
@@ -99,30 +98,18 @@ export default function Exam({navigation,route}) {
                <Ionicons name="ios-arrow-back" size={34} color="#1d79cf" />
             </TouchableOpacity>    
          
-      <Text style={{fontFamily:'myfont',color:'#1d79cf',marginTop:20,fontSize:15}}>{`${date} Тогтоосон үг шалгах`}</Text>
-      <View style={{flexDirection:'row',width:'100%',height:'auto'}}>
-        <Text>
+          <Text style={{fontFamily:'myfont',color:'#1d79cf',marginVertical:20,fontSize:15}}>{`${date} Тогтоосон үг шалгах`}</Text>
 
-        </Text>
-     </View>
-        {loading?<ActivityIndicator/>:<Dragglist data={data}  data2={data2} day={route.params.day}  changedata2={changedata2}/>}
-        <Text style={{textAlign:'center',marginTop:30,fontSize:15,fontFamily:'myfont',color:'#1d79cf'}}>{'Монгол үгийг зөөж Англи үгийн харалдаа мөрөнд байрлуулна уу'}</Text>
-        <View style={{flexDirection:'row',width:'70%',marginTop:10,marginHorizontal:'20%',height:'auto',justifyContent:'center'}}>
-                <TouchableOpacity onPress={checkresult}  style={{width:150,height:50,backgroundColor:'#7de89a',borderRadius:50,justifyContent:'center',alignItems:'center'}}>
-                {loading?<ActivityIndicator size={'small'} color={'grey'}/>:
-                    <Text style={{color:'white',fontFamily:'myfont'}}>{'ШАЛГАХ'}</Text>}
-                </TouchableOpacity>
-        </View>
-
-             <Modal visible={modal}>
-                <TouchableWithoutFeedback onPress={()=>setModal(false)}>
-                    <View style={styles.modalOverlay} />
-                </TouchableWithoutFeedback>  
-                <View style={styles.Modal}>
-                    <ActivityIndicator size={'large'} color={'grey'}/>                    
-                 </View>
-            </Modal>
-            </View>     
+            {loading?<ActivityIndicator/>:
+            <Dragglist data={data}  data2={data2} day={route.params.day}  changedata2={changedata2}/>}
+            <Text style={{textAlign:'center',marginTop:30,fontSize:15,fontFamily:'myfont',color:'#1d79cf'}}>{'Монгол үгийг зөөж Англи үгийн харалдаа мөрөнд байрлуулна уу'}</Text>
+            <View style={{flexDirection:'row',width:'70%',marginTop:10,marginHorizontal:'20%',height:'auto',justifyContent:'center'}}>
+                    <TouchableOpacity onPress={checkresult}  style={{width:150,height:50,backgroundColor:'#7de89a',borderRadius:50,justifyContent:'center',alignItems:'center'}}>
+                    {loading?<ActivityIndicator size={'small'} color={'grey'}/>:
+                        <Text style={{color:'white',fontFamily:'myfont'}}>{'ШАЛГАХ'}</Text>}
+                    </TouchableOpacity>
+            </View>
+    </View>     
     </ImageBackground>
   );
 }

@@ -9,12 +9,13 @@ import {Paths}from '../assets/list.js';
 import Toast from 'react-native-tiny-toast'
 import { FlatList } from "react-native";
 const screen_height=Dimensions.get('window').height
+const screen_width=Dimensions.get('window').width
+
 const list_item=screen_height>690?60:50
-export default function draggeble(props) {
-    const [data2,setData2]=useState(props.data2)   
+export default function draggeble({data,data2,changedata2}) {
     const [playing, setPlaying] = useState(false)
     const flatListRef = React.useRef()
-      async function playsound(eng){
+    async function playsound(eng){
         if(!playing)
         {
                 setPlaying(true)
@@ -45,8 +46,8 @@ export default function draggeble(props) {
                     }
         
         }
-      }
-      function renderItem( item, index, drag, isActive){
+    }
+    function renderItem( item, index, drag, isActive){
         return (
           <TouchableOpacity
             style={{
@@ -76,7 +77,7 @@ export default function draggeble(props) {
           </TouchableOpacity>
         );
       };
-      function renderItem2( item, index){
+    function renderItem2( item, index){
         return (
           <View
             style={{
@@ -107,14 +108,14 @@ export default function draggeble(props) {
         );
       };
   return (
-      <View style={{borderRadius:20,flexDirection:'row',marginTop:10,borderRadius:20,width:'100%',marginHorizontal:15,height:'auto',justifyContent:'center',alignItems:'center',backgroundColor:'transparent'}}>
+      <View style={{borderRadius:20,flexDirection:'row',marginTop:10,borderRadius:20,width:'100%',height:'auto',justifyContent:'center',alignItems:'center',backgroundColor:'transparent'}}>
                <FlatList
-                data={props.data}
+                data={data}
                 scrollEnabled={false}
                 dragItemOverflow={false}
-                style={{borderRadius:20}}
+                style={{borderRadius:20,width:screen_width/2}}
                 renderItem={({ item, index})=>renderItem2(item, index)}
-                keyExtractor={(item, index) => `key-${item.index}`}
+                keyExtractor={(item, index) => `${item.index}:${index}`}
                 />
                 <DraggableFlatList
                   data={data2}
@@ -122,9 +123,9 @@ export default function draggeble(props) {
                   dragItemOverflow={false}
                   ref={flatListRef}
                   alwaysBounceVertical={false}
-                  style={{borderRadius:20}}
+                  style={{borderRadius:20,width:screen_width/2}}
                   renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive)}
-                  keyExtractor={(item, index) => `${item.index}`}
+                  keyExtractor={(item, index) => `${item.index}:${index}`}
                   onDragEnd={({ data,from,to }) =>{change(from,to)}}
                   />           
         </View>
@@ -136,8 +137,7 @@ export default function draggeble(props) {
       newData[from]=newData[to];
       newData[to]=i;
       newData[to].dragged=true;
-      setData2(newData)
-      props.changedata2(newData)
+      changedata2(newData)
   }
 
 }

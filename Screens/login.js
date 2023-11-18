@@ -261,7 +261,7 @@ const LoginScreen = ({navigation,route}) => {
      })
     savingNews();
                   db.transaction((tx)=>{
-                       tx.executeSql(`delete from D03`,[],(tx,result)=>{ 
+                       tx.executeSql(`delete from word`,[],(tx,result)=>{ 
                                   service.GetCalendarWords(barkodstr).then(result=>result.json()).then(result=>{
                                     var promises = [];
                                     console.log(result.length)
@@ -271,8 +271,8 @@ const LoginScreen = ({navigation,route}) => {
 
                                          //var one=new Promise((resolve,reject) =>{
                                                   db.transaction(async (tx)=>{
-                                                      tx.executeSql("INSERT INTO D03(D0300,D0301,D0302,D0303,D0304,D0305,D0306,D0307) VALUES ((?),(?),(?),(?),(?),(?),(?),(?))"
-                                                      ,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{
+                                                      tx.executeSql("INSERT INTO word VALUES ((?),(?),(?),(?),(?),(?))"
+                                                      ,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio],(tx,result)=>{
                                                                 i++ 
                                                                 if(i>=2900)
                                                                 {

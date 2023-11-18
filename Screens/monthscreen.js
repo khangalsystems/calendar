@@ -12,9 +12,8 @@ import * as SecureStore from 'expo-secure-store';
 import config from '../config.json'
 import { daysInMonth } from '../functions/daysInMonth';
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
-import { getMarks } from '../store/selector';
-import { setMarks } from '../store/reducer';
+import { useFocusEffect } from '@react-navigation/native';
+
 const db=SQLite.openDatabase(config.basename)
 LocaleConfig.locales['mn'] = {
   monthNames: ['1 сар','2 сар','3 сар','4 сар','5 сар','6 сар','7 сар','8 сар','9 сар','10 сар','11 сар','12 сар'],
@@ -41,7 +40,6 @@ const monthColors=[
  ]
  const Monthscreen = ({navigation,route}) => {
   let date=dayjs();
-  const storedMarks=useSelector(getMarks)
   const modalwidth=Dimensions.get('window').width-100;
   const [modal,setModal]=useState(false)
   const [loading,setLoading]=useState(true)
@@ -54,20 +52,55 @@ const monthColors=[
   const [middletext,setMiddletext]=useState(' ')
   const [succtoken, setSucctoken] = useState(false)
   const [expired, setExpired] = useState(false)
-  const [marks,changeMarks] = useState(storedMarks)
-
-  function fillmarks(year,month,day){
+  const [minDate,setMinDate] = useState(null)
+  const [maxDate,setMaxDate] = useState(null)
+  const [marks,setMarks]=useState({})
+  async function fillmarks(year,month,day){
      checkalert()
      setDay(day)
      setMonth(month)
      setYear(year)
      var date=''+route.params.year+'-'+String(route.params.month).padStart(2,"0")+'-'+String(route.params.day).padStart(2,"0"); 
+     var jsDate=dayjs(date)
+     setMinDate(jsDate.startOf('month').format('YYYY-MM-DD'))
+     setMaxDate(jsDate.endOf('month').format('YYYY-MM-DD'))   
      setCurrentdate(date)
-     setLoading(false) 
+                                        var sql=`select * from dayscore2 where month=${jsDate.month()+1}`;  
+                                        var storedMarks=await executeSql(sql)
+                                        var oldMarks={...marks}
+                                         const weekends=getWeekends(jsDate.startOf('month').format('YYYY-MM-DD'))
+                                         weekends.map(day=>{
+                                              oldMarks[day]={
+                                                   selected:true,
+                                                   selectedColor:monthColors[jsDate.month()+1].color
+                                                }
+                                          })
+                                          if(storedMarks)
+                                          {
+                                            
+                                            storedMarks.map(rec=>{
+                                                oldMarks[rec.date]={
+                                                   selected:true,
+                                                   selectedColor:rec.scorecolor
+                                                }
+                                            })
+                                           
+                                          }  
+                                          setMarks(oldMarks)
+                                         
+     setTimeout(() => {
+       setLoading(false)
+     }, 500);
   }
- useEffect(() => {
-    fillmarks(route.params.year,route.params.month,route.params.day)
- }, [route.params.year,route.params.month])//route.params.day
+   useFocusEffect(
+      React.useCallback(() => {
+        console.log('focused')
+        fillmarks(route.params.year,route.params.month,route.params.day)
+      }, [route.params.month,route.params.day])
+  );
+//  useEffect(() => {
+//     fillmarks(route.params.year,route.params.month,route.params.day)
+//  }, [route.params.month])//route.params.day
   const checkalert=async ()=>
   {
     return
@@ -122,32 +155,64 @@ const monthColors=[
   } 
   const navigate1=()=>{
     setModal(false)
-    navigation.navigate('Exam',{day:day,month:month,year:route.params.year})
+    navigation.navigate('Exam',{day:day,month:month,year:year})
   }
   const navigateVoice=()=>{
     setModal(false)
-    navigation.navigate('Examvoice',{day:day,month:month,year:route.params.year})
+    navigation.navigate('Examvoice',{day:day,month:month,year:year})
   }
   const navigate7=()=>{
     setModal(false)
-    navigation.navigate('Exam7',{day:day,month:month,year:route.params.year,date:currentdate})
+    navigation.navigate('Exam7',{day:day,month:month,year:year,date:currentdate})
    }
   const renderArrow=(direction)=>{
     if(direction === 'left') {
-        return <Ionicons name="ios-arrow-back" size={54} style={{zIndex:2}} color={'#1d79cf'} />
+        return <Ionicons onPress={()=>changeMonth(-1)} name="ios-arrow-back" size={54} style={{zIndex:2}} color={'#1d79cf'} />
     } else {
-        return <Ionicons name="ios-arrow-forward" size={54} color={'#1d79cf'} />
+        return <Ionicons onPress={()=>changeMonth(1)} name="ios-arrow-forward" size={54} color={'#1d79cf'} />
     }
   }
-  const onVisibleMonthsChange=e=>{
-    setLoading(true)
-    var selectedMonthData=e[0]
-    var year=selectedMonthData.year,month=selectedMonthData.month,day=selectedMonthData.day
-    setDay(day)
-    setMonth(month)
-    setYear(year)
-    setCurrentdate(`${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`)
-    var oldMarks={...storedMarks}
+  const changeMonth=async (step)=>{
+     setLoading(true)
+     console.log('monthChanged!')
+     var jsDate=dayjs(currentdate).add(step,'month')
+     if(jsDate.year()>year) jsDate=jsDate.add(-1,'year').startOf('year')
+     if(jsDate.year()<year) jsDate=jsDate.add(1,'year').endOf('year')
+
+     setDay(jsDate.startOf('month').date())
+     setMonth(jsDate.month())
+     setMinDate(jsDate.startOf('month').format('YYYY-MM-DD'))
+     setMaxDate(jsDate.endOf('month').format('YYYY-MM-DD')) 
+     setCurrentdate(jsDate.startOf('month').format('YYYY-MM-DD')) 
+                                        //udriin ungu uguh
+                                        var sql=`select * from dayscore2 where month=${jsDate.month()+1}`;  
+                                        var storedMarks=await executeSql(sql)
+                                        var oldMarks={...marks}
+                                         const weekends=getWeekends(jsDate.startOf('month').format('YYYY-MM-DD'))
+                                         weekends.map(day=>{
+                                              oldMarks[day]={
+                                                   selected:true,
+                                                   selectedColor:monthColors[jsDate.month()+1].color
+                                                }
+                                          })
+                                          if(storedMarks)
+                                          {
+                                            
+                                            storedMarks.map(rec=>{
+                                                oldMarks[rec.date]={
+                                                   selected:true,
+                                                   selectedColor:rec.scorecolor
+                                                }
+                                            })
+                                           
+                                          }  
+                                          setMarks(oldMarks)
+                                         
+     setTimeout(() => {
+       setLoading(false)
+     }, 500);
+
+   // var oldMarks={...storedMarks}
 }
  const changeCurrentDate=(e)=>setCurrentdate(e)
   return (
@@ -161,18 +226,20 @@ const monthColors=[
             </TouchableOpacity>         
          
        <View  style={styles.container}>
-          {!loading&&
+          {loading?<View style={{height:345,width:'100%'}}><ActivityIndicator /></View>:
                 <CalendarList
                       hideArrows={false}
                       markedDates={{...marks,[currentdate]:{selected:true,selectedColor:'#1cb1ed'}}}      
-                      minDate={route.params.year+'-01-01'}
-                      maxDate={route.params.year+'-12-31'}
+                      minDate={minDate}
+                      maxDate={maxDate}
                       current={currentdate}    
                       style={{height:345}}
+                      
                       renderArrow={renderArrow} 
                       monthFormat={"M сар"} 
                       firstDay={1}
                       horizontal
+                    
                       disableLeft={true}
                       theme={{
                         textSectionTitleColor:'#1d79cf',//route.params.color,
@@ -187,7 +254,7 @@ const monthColors=[
                       }}             
                       pastScrollRange={10}
                       futureScrollRange={10}
-                      onVisibleMonthsChange={onVisibleMonthsChange}              
+                      //onVisibleMonthsChange={onVisibleMonthsChange}              
                       pagingEnabled
                       onDayPress={(e)=>{NewDaySelected(e.day,e.month)}}
                />
@@ -253,7 +320,30 @@ const monthColors=[
     var  curDate=dayjs(currentdate)
     return `${curDate.add(-1,'day').format('YYYY-MM-DD')}-c ${curDate.add(1,'day').format('YYYY-MM-DD')}`
   }
+  async function executeSql(sql){
+      return new Promise((resolve, reject) =>db.transaction(tx => {
+       tx.executeSql(sql, [], (_, { rows }) => {
+        if(rows.length>0){   
+          resolve(rows._array)
+        }
+       else 
+          resolve(null)                             
+        })
+      }))
+  }
+  function getWeekends(date){
+    var d = new Date(date);
+    var getTot = daysInMonth(d.getMonth(),d.getFullYear()); //Get total days in a month
+    var weekends = new Array();   //Declaring array for inserting Saturdays
 
+    for(var i=1;i<=getTot;i++){    //looping through days in month
+        var newDate = new Date(d.getFullYear(),d.getMonth(),i)
+        if(newDate.getDay()==0 || newDate.getDay()==6){   //if Sunday
+            weekends.push(dayjs(newDate).format('YYYY-MM-DD'));
+        }
+    }
+     return weekends
+  }
  
 
  
