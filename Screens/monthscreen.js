@@ -56,6 +56,7 @@ const monthColors=[
   const [maxDate,setMaxDate] = useState(null)
   const [marks,setMarks]=useState({})
   async function fillmarks(year,month,day){
+
      checkalert()
      setDay(day)
      setMonth(month)
@@ -214,7 +215,7 @@ const monthColors=[
 
    // var oldMarks={...storedMarks}
 }
- const changeCurrentDate=(e)=>setCurrentdate(e)
+ const changeCurrentDate=(e)=>{setCurrentdate(e),console.log(e)}
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch'  style={{flex:1}}>
        

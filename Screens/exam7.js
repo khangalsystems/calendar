@@ -46,7 +46,7 @@ export default function Exam7({navigation,route}) {
 
   },[route.params.type,route.params.date])
 
-  async function checkresult(){
+  const checkresult=()=>{
     setLoading(true)
      var fail=0;
      var sdata=[];
@@ -114,50 +114,59 @@ export default function Exam7({navigation,route}) {
 
   function changedata2(el,i)
   {
-    var dat=data;
+    var dat=[...data];
     dat[i][1]=el;
     setData(dat)
   }
-
-  var corref;
+  useEffect(()=>{
+        var index=pos/width;
+        console.log(index)
+        if(index==0)
+           setLeft(false)
+        else {
+          setLeft(true);setRight(true)
+          if(index==2)
+            setRight(false)
+           else  {setLeft(true);setRight(true)}
+        }
+        
+        
+  },[pos])
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch' style={styles.container}>
-       <View style={{justifyContent:'center',alignItems:'flex-start'}}>
             <Header navigation={navigation} url={''} title={title} params={{first:false}}/>
 
-            {data.length<2?<ActivityIndicator size={'large'} color={'#1d79cf'}/>:
-                <ScrollView 
-                  horizontal
-                  ref={scrollref}
-                  onScroll={(e)=>setPos(e.nativeEvent.contentOffset.x)}
-                  showsHorizontalScrollIndicator={false}
-                  scrollEventThrottle={200}
-                  decelerationRate="fast"
-                  pagingEnabled
-                  >
-                      {[0,1,2].map(e=>{
-                        return <View style={{width:width,height:list_item*8+20}}>
-                                <Dragglist key={e} changedata2={(el)=>changedata2(el,e)} data={data[e][0]} data2={data[e][1]}/> 
-                              </View>
-                      })}
-                </ScrollView>          
-              }
-              <View style={{width:'100%',height:40,justifyContent:'space-between',alignItems:'center',flexDirection:'row'}}>
+                {data.length<2?<ActivityIndicator size={'large'} color={'#1d79cf'}/>:
+                    <ScrollView 
+                      horizontal
+                      ref={scrollref}
+                      onScroll={(e)=>{setPos(e.nativeEvent.contentOffset.x)}}
+                      showsHorizontalScrollIndicator={false}
+                      scrollEventThrottle={200}
+                      decelerationRate="fast"
+                      pagingEnabled
+                      >
+                          {[0,1,2].map(e=>{
+                            return <View style={{width:width,height:list_item*8+20}}>
+                                    <Dragglist key={e} changedata2={(el)=>changedata2(el,e)} data={data[e][0]} data2={data[e][1]}/> 
+                                  </View>
+                          })}
+                    </ScrollView>          
+                  }
+              <View style={{width:'100%',alignSelf:'center',height:40,justifyContent:'space-between',alignItems:'center',flexDirection:'row'}}>
                   <Entypo name="arrow-long-left" style={{marginLeft:20}} onPress={scrolleft} size={45} color={left?"#1d79cf":'#a6a7ab'} />
                   <Entypo name="arrow-long-right" style={{marginRight:20}} onPress={scrollright} size={45} color={right?"#1d79cf":'#a6a7ab'} />
               </View>
-            <Text style={{textAlign:'center',fontFamily:'myfont',color:'#1d79cf',paddingHorizontal:5}}>{'Монгол үгийг зөөж Англи үгийн харалдаа мөрөнд байрлуулна уу'}</Text>
-             <TouchableOpacity onPress={()=>checkresult(corref)}  style={{width:110,height:40,alignSelf:'center',backgroundColor:'#1d79cf',borderRadius:50,justifyContent:'center',alignItems:'center'}}>
+             <Text style={{textAlign:'center',alignSelf:'center',fontFamily:'myfont',color:'#1d79cf',paddingHorizontal:5}}>{'Монгол үгийг зөөж Англи үгийн харалдаа мөрөнд байрлуулна уу'}</Text>
+             <TouchableOpacity onPress={checkresult}  style={{marginVertical:30,width:110,height:40,alignSelf:'center',backgroundColor:'#1d79cf',borderRadius:50,justifyContent:'center',alignItems:'center'}}>
                     {loading?<ActivityIndicator size={'small'} color={'white'}/>:
                         <Text style={{color:'white',fontFamily:'myfont'}}>{'Дуусгах'}</Text>}
-              </TouchableOpacity>
-                
-      </View>
+              </TouchableOpacity>         
     </ImageBackground>
   );
   function scrolleft()
   {
-       var index=pos/width;
+        var index=pos/width;
         if(index!=0)
         {
           if(index===1) setLeft(false)

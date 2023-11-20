@@ -21,8 +21,8 @@ export default function words({currentDate,changeParentDay}) {
    useEffect(() => {
     _askForAudioPermission();
     setLoading(true)
-     var prevDate=dayjs(currentDate).add(-1,'day');
-     var nextDate=dayjs(currentDate).add(1,'day');
+     var prevDate=dayjs(currentDate).add(-1,'day').format('YYYY-MM-DD');
+     var nextDate=dayjs(currentDate).add(1,'day').format('YYYY-MM-DD');
      var data=[]  
      db.transaction(
             tx => {
@@ -46,9 +46,9 @@ export default function words({currentDate,changeParentDay}) {
                               data.push(data2)
                               if(data3.length>0)
                                  data.push(data3)
-                              setWords(data)                                               
+                              setWords(data) 
                               if(rreef!=null) 
-                                rreef.snapToItem (1,false)
+                                rreef.snapToItem(1,false)
                                setLoading(false)
                                },(tx,res)=>{console.log(res)});            
                               })
@@ -93,11 +93,11 @@ export default function words({currentDate,changeParentDay}) {
       const response = await Audio.requestPermissionsAsync();  
     };
    const changeDay=(e)=>{
-    console.log(e)
+    setLoading(true)
     var newDate=dayjs(currentDate)
-    if(e)
-    newDate.add(-1,'day')
-    else newDate.add(1,'day')
+    if(e==0)
+      newDate=newDate.add(-1,'day')
+    else newDate=newDate.add(1,'day')
     changeParentDay(newDate.format('YYYY-MM-DD'))
    }
         return (
