@@ -38,17 +38,7 @@ export default function Prefering(props) {
               if(len==0)
               {
                     props.navigation.navigate('Login')
-                    props.navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [
-                        {
-                          name: 'Login',                       
-                        },
-                      ],
-                    })
-                  );
-                  return 0
+                    return 0
               }
               else 
               {
@@ -274,7 +264,7 @@ export default function Prefering(props) {
         
          {updating?
          
-                <Modal visible={updating}>
+                     <Modal visible={updating}>
                            
                            
                            <View style={styles.Modal}>

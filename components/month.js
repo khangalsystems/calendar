@@ -9,10 +9,13 @@ import dayjs from 'dayjs';
 const db=SQLite.openDatabase(config.basename)
 export default function Month({month,year,color,color2,onclick,refresh}) {
   const [marks,setMarks]=useState(null)
+  const [loading,setLoading]=useState(true)
+
   useEffect(()=>{
           getMonthData()                          
   },[month,refresh])
   const getMonthData=async ()=>{
+                                        setLoading(true)
                                         var date=`${year}-${String(month).padStart(2,"0")}-01`; 
                                         var sql=`select * from dayscore2 where month=${month}`;
                                         var storedMarks=await executeSql(sql)
@@ -36,9 +39,9 @@ export default function Month({month,year,color,color2,onclick,refresh}) {
                                                     backgroundColor:haveScore.scorecolor
                                                  })
                                           })
-                                          console.log(oldMarks.length)
                                          setMarks(oldMarks)
- 
+                                         setLoading(false)
+
 
   }
   async function executeSql(sql){
@@ -97,14 +100,13 @@ export default function Month({month,year,color,color2,onclick,refresh}) {
        
         </View>
        
-        <View style={styles.dayscontainer}>
-         {marks&&marks.map((e,i)=>{         
-           return <View key={i} style={{width:'13%',height:16,justifyContent:'center',margin:0.5,marginVertical:0.5,backgroundColor:e.backgroundColor,alignItems:'center'}}>
-                         <Text     style={{fontSize:8,fontWeight:'normal',color:e.selectedColor}}>{e.day}</Text>
-                  </View>
+       
+         {!loading? <View style={styles.dayscontainer}>{marks.map((e,i)=>{         
+                      return <View key={i} style={{width:'13%',height:16,justifyContent:'center',margin:0.5,marginVertical:0.5,backgroundColor:e.backgroundColor,alignItems:'center'}}>
+                                 <Text     style={{fontSize:8,fontWeight:'normal',color:e.selectedColor}}>{e.day}</Text>
+                       </View>
                 
-         })}
-         </View>
+             })}</View>:<View style={{width:'100%',justifyContent:'center',alignItems:'center',height:70}}><ActivityIndicator  color={color}/></View>}
        
     </TouchableOpacity>
   )

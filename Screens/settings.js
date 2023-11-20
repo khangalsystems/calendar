@@ -21,28 +21,16 @@ Notifications.setNotificationHandler({
   }),
 });
 import config from '../config.json'
+import { downloadWords } from '../functions/downloadWords';
 const db=SQLite.openDatabase(config.basename)
-export default function Settings(props) {
+export default function Settings({route,navigation}) {
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
    getnotinfo()
-    // notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-    //   setNotification(notification);
-    // });
-
-    // responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-    //   console.log(response);
-    // });
-
-    return () => {
-     // Notifications.removeNotificationSubscription(notificationListener);
-     // Notifications.removeNotificationSubscription(responseListener);
-    };
   }, []);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const [on, setOn] = useState(true)
   const [data, setData] = useState({})
@@ -65,9 +53,14 @@ export default function Settings(props) {
     setHour2(data.nothour2.toString())
     setMinute2(data.notminut2.toString())
   }
+  const update=async ()=>{  
+     setDownloading(true)
+     const res=await downloadWords()
+     setDownloading(false)
+  }
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch' style={styles.container}> 
-      <Header navigation={props.navigation} url={""} params={{}}  title={'Тохиргоо'}/>
+      <Header navigation={navigation} url={""} params={{}}  title={'Тохиргоо'}/>
          
 
      <View style={{flexDirection:'row',paddingHorizontal:10,height:70,borderTopLeftRadius:20,borderTopRightRadius:20,marginTop:10, width:'100%',borderBottomWidth:0.3,backgroundColor:"#fff",borderBottomColor:'#4dd8f7',justifyContent:'space-between',alignItems:'center'}}> 
@@ -151,7 +144,7 @@ export default function Settings(props) {
               {donwloading?
                 <ActivityIndicator style={{width:70,height:70,justifyContent:'center',alignItems:'center'}} size={'large'} color="#6aa8e6"/>
               :
-               <TouchableOpacity onPress={()=>update()} style={{width:70,height:70,justifyContent:'center',alignItems:'center'}}>            
+               <TouchableOpacity onPress={update} style={{width:70,height:70,justifyContent:'center',alignItems:'center'}}>            
                   <SimpleLineIcons name="reload" size={30} color="#6aa8e6" />
                </TouchableOpacity>
               }
@@ -159,202 +152,7 @@ export default function Settings(props) {
 
      </ImageBackground>
   );
-//   <TouchableOpacity onPress={()=>{relogin()}} style={{flexDirection:'column',width:(Dimensions.get('window').width),borderBottomWidth:0.3,backgroundColor:"#fff",height:70,justifyContent:'flex-start',alignItems:'flex-start'}}> 
-//   <Text style={{color:'grey',width:'40%',height:70,textAlign:'center',textAlignVertical:'center',marginLeft:10}}>{'Шинэ холболт үүсгэх'}</Text> 
 
-// </TouchableOpacity>
-  async function relogin(){
-    await SecureStore.deleteItemAsync('info');
-    const query11 = `delete  from companyinfo2`;
-    await db.transaction(trx => {
-          let trxQuery = trx.executeSql(
-              query11
-              ,[]
-              ,(transact,resultset) =>{ }
-          )})
-          const query = `select * from medee`;
-          await db.transaction(trx => {
-                let trxQuery = trx.executeSql(
-                    query
-                    ,[]
-                    ,(transact,resultset) =>{ 
-                      try{             
-                          var allnews=resultset.rows._array.map(async news=>{
-                                    if(news.topimage!='')
-                                    {    
-                                        var imagename=news.topimage.split('/');
-                                        imagename=imagename[imagename.length-1]
-                                        var filepath=FileSystem.documentDirectory + imagename;
-                                        let tmp = await FileSystem.getInfoAsync(filepath);
-                                        if(tmp.exists)
-                                        {
-                                          console.log('zurag ustgaj baina :'+filepath)
-                                          try{
-                                             await FileSystem.deleteAsync(filepath);
-                                          }catch(e){
-                                           console.log('zurag ustaj chadaagui:'+filepath)
-                                          }
-                                        }
-                                        return({});
-                                    }
-                                    else
-                                      return ({});
-                             })
-                             Promise.all(allnews).then(async function(results) {
-                                 
-                              const query22= `delete  from medee`;
-                              await db.transaction(trx => {
-                                    let trxQuery = trx.executeSql(
-                                        query22
-                                        ,[]
-                                        ,(transact,resultset) =>{ 
-                                          Notifications.cancelAllScheduledNotificationsAsync()
-                                          props.navigation.navigate('Login')
-                                          props.navigation.dispatch(
-                                            CommonActions.reset({
-                                              index: 0,
-                                              routes: [
-                                                {
-                                                  name: 'Login',                       
-                                                },
-                                              ],
-                                            })
-                                          );
-                                          
-
-                                        },(transact,error)=>console.log(error)
-                                    )}
-                                     
-                                    )
-                             }) 
-                            }
-                            catch(e){console.log(e)}
-                           },(transact,error)=>{console.log(error)}
-                           )
-                       
-                    }
-                    ,(transact,err) => console.log('error occured ', err)
-              );
-  
-  }
-  async function update() {  
-         let service = new AllService();
-          service.GetAbout().then(result=>result.json()).then(async result=>{
-
-            try {
-              const query = `insert into companyinfo2(mail,facebookurl,address,about,trialtext,phone,date) values ('${result.mail}','${result.facebookurl}','${result.address}','${result.about}','${result.trialText}','${result.phone}','${result.updateognoo}');`;
-              db.transaction(trx => {
-                  let trxQuery = trx.executeSql(
-                      query
-                      ,[]
-                      ,(transact,resultset) => console.log(resultset)
-                      ,(transact,err) => console.log('error occured ', err)
-                );
-              })
-            } catch (error)
-              {
-                console.log(error)
-              }
-          })            
-          var data=await SecureStore.getItemAsync('info');
-          data=JSON.parse(data);
-          setDownloading(true)    
-          var query="delete from word";
-                  db.transaction((tx)=>{
-                     tx.executeSql(query,[],(tx,result)=>{ 
-                       console.log('base cleared')                      
-                    },(tx,result)=>{
-                   
-                  })
-                  })   
-          
-             await service.GetCalendarWords(data.token).then(result=>result.json()).then(async result=>{
-             await result.forEach(async el => {
-                            var query="INSERT INTO word VALUES ((?),(?),(?),(?),(?),(?))";
-                             db.transaction(async (tx)=>{
-                               tx.executeSql(query,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio,'',el.tp],(tx,result)=>{                                       
-                              },(tx,result)=>{
-                            })
-                            })
-                           
-                                  
-              }); 
-               
-            }) 
-            db.transaction((tx)=>{
-              var query="select count(*) from word";
-               tx.executeSql(query,[],async (tx,result)=>{ 
-                  var data=await SecureStore.getItemAsync('info');
-                  data=JSON.parse(data);
-                  var token = data.token;
-                    const query = `select * from medee order by newsid desc`;
-                  await db.transaction(trx => {
-                        let trxQuery = trx.executeSql(
-                            query
-                            ,[]
-                            ,(transact,resultset) =>{ 
-                               var lastindex=0;
-                               if(resultset.rows._array.length>0)
-                               {
-                                 lastindex=resultset.rows._array[0].newsid
-                               }               
-                                 service.Getreklams(token,lastindex).then(result=>result.json())
-                                 .then(result=>{              
-                                  var allnews=result.map(news=>{
-                                            if(news.topimage!='')
-                                            {    
-                                                var imagename=news.topimage.split('/');
-                                                imagename=imagename[imagename.length-1]
-                                                const downloadResumable = FileSystem.createDownloadResumable(
-                                                  news.topimage,
-                                                  FileSystem.documentDirectory + imagename,
-                                                  {},
-                                                  (downloadProgress )=>{}
-                                                );
-                                                try {
-                                                  downloadResumable.downloadAsync();           
-                                                } catch (e) {
-                                                  console.error(e);
-                                                }
-                                                news.topimage=FileSystem.documentDirectory + imagename;
-                                                return(news);
-                                            }
-                                            else
-                                              return (news);
-                                     })
-                                     Promise.all(allnews).then(async function(results) {
-                                         //console.log(allnews)
-                                         // console.log(JSON.stringify(allnews))
-                                         //'CREATE TABLE IF NOT EXISTS  news(index integer,title text,newstext text,topimage text,date text,videourl text);'
-                                          results.forEach(item => {
-                                          const query = `insert into medee(title,newstext,topimage,date,videourl,newsid) values ('${item.title}','${item.newstext}','${item.topimage}','${item.date}','${item.videourl}',${item.index});`;
-                                          db.transaction(trx => {
-                                              let trxQuery = trx.executeSql(
-                                                   query
-                                                  ,[]
-                                                  ,(transact,resultset) => console.log(resultset)
-                                                  ,(transact,err) => console.log('error occured ', err)
-                                             );
-                                          })
-                                         });
-                                         setDownloading(false);   
-                                         
-                                     }) 
-                                   }).catch(e=>console.log(e))
-                               
-                            }
-                            ,(transact,err) => console.log('error occured ', err)
-                      );
-                    })
-                                                 
-              },(tx,result)=>{
-              console.log(result);
-            })
-            })
-         
-    
-      
-  }
   async function setonoff(){
     setOn(!on)
     if(on)

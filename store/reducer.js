@@ -2,15 +2,18 @@ import { createSlice } from '@reduxjs/toolkit';
 
 export const changeLogged = createSlice({
   name: 'calendar',
-  initialState:{marks:{}},
+  initialState:{refresh:false,logged:false},
   reducers: {
-    setMarks: (state, action) => {
-      state.marks=action.payload;
+    setRefresh: (state, action) => {
+      state.refresh=!state.refresh;
+    },
+    setLogged: (state, action) => {
+      state.logged=action.payload;
     },
 }});
 
 // this is for dispatch
-export const { setMarks} = changeLogged.actions;
+export const { setRefresh,setLogged } = changeLogged.actions;
 
 // this is for configureStore
 export default changeLogged.reducer;

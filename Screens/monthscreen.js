@@ -12,7 +12,8 @@ import * as SecureStore from 'expo-secure-store';
 import config from '../config.json'
 import { daysInMonth } from '../functions/daysInMonth';
 import dayjs from 'dayjs';
-import { useFocusEffect } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { getRefresh } from '../store/selector';
 
 const db=SQLite.openDatabase(config.basename)
 LocaleConfig.locales['mn'] = {
@@ -42,6 +43,7 @@ const monthColors=[
   let date=dayjs();
   const modalwidth=Dimensions.get('window').width-100;
   const [modal,setModal]=useState(false)
+  const refresh=useSelector(getRefresh)
   const [loading,setLoading]=useState(true)
   const [currentdate, setCurrentdate] = useState('')
   const [day, setDay] = useState(route.params.day?route.params.day:date.date())
@@ -93,15 +95,9 @@ const monthColors=[
        setLoading(false)
      }, 500);
   }
-   useFocusEffect(
-      React.useCallback(() => {
-        console.log('focused')
-        fillmarks(route.params.year,route.params.month,route.params.day)
-      }, [route.params.month,route.params.day])
-  );
-//  useEffect(() => {
-//     fillmarks(route.params.year,route.params.month,route.params.day)
-//  }, [route.params.month])//route.params.day
+  useEffect(()=>{
+    fillmarks(route.params.year,route.params.month,route.params.day)
+  },[refresh,route.params.month,route.params.day])
   const checkalert=async ()=>
   {
     return

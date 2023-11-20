@@ -2,27 +2,22 @@
 import React,{useState,useRef,useEffect,createRef} from 'react';
 import { Dimensions, StyleSheet, Text, View,ScrollView,TouchableOpacity,ActivityIndicator,TouchableWithoutFeedback, ImageBackground} from 'react-native';
 import Banner from '../components/banner.js';
-import * as SQLite from 'expo-sqlite'
 import Month from '../components/month.js';
 
 import HeaderMain from '../components/headermain.js';
-import Loader from '../components/Loader.js';
-import config from '../config.json'
+
 import dayjs from 'dayjs';
-import { useFocusEffect } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { getRefresh } from '../store/selector.js';
 export default function Main({route,navigation}) {
   let date=new Date();
-  let nowyear=date.getFullYear()-1
-  const [refresh,setRefresh]=useState(false)
-  useFocusEffect(
-      React.useCallback(() => {
-        console.log('focused main')
-        setRefresh(!refresh)
-      }, [route.params.month,route.params.day])
-  );
+  let nowyear=date.getFullYear()
+  const refresh=useSelector(getRefresh);
+
   useEffect(() => {  
+    console.log('main')
     var nowDate =dayjs();
-    navigation.navigate('Month',{month:nowDate.month()+1,year:nowDate.year()-1,day:nowDate.date()})
+    navigation.navigate('Month',{month:nowDate.month()+1,year:nowDate.year(),day:nowDate.date()})
   },[])
 
   function changemonth(y,m,color){

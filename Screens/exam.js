@@ -8,12 +8,10 @@ import Modal from "react-native-modal";
 
 import config from '../config.json'
 import { useDispatch, useSelector } from 'react-redux';
-import { getMarks } from '../store/selector';
-import { setMarks } from '../store/reducer';
+import { setRefresh } from '../store/reducer';
 const db=SQLite.openDatabase(config.basename)
 export default function Exam({navigation,route}) {
     const [data,setData]=useState([])
-    const marks=useSelector(getMarks)
     const dispatch=useDispatch()
     const [loading,setLoading]=useState(true)
     const [data2,setData2]=useState([])
@@ -74,12 +72,7 @@ export default function Exam({navigation,route}) {
                         query
                         ,[]
                         ,(transact,resultset) => {
-                          var newMarks={...marks}
-                          newMarks[date]={
-                             selected:true,
-                             selectedColor:scoreColor
-                          }
-                          dispatch(setMarks(newMarks))
+                          dispatch(setRefresh())
                           navigation.navigate('Result',{data1:data,data2:tdata2,fail:fail,day:route.params.day,month:route.params.month,year:route.params.year})
                         }
                         ,(transact,err) => console.log('error occured ', err)

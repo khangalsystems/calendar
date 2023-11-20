@@ -12,7 +12,7 @@ export default function Result({navigation,route}) {
           <View
             style={{
               height:list_item,
-              backgroundColor: item.fail==0?'#29d668':'#e04e41',
+              backgroundColor: item.fail==0?'#29d668':'#fff',
               borderRadius:0,
               borderBottomWidth:0.5,
               flexDirection:'row',

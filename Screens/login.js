@@ -16,11 +16,16 @@ import * as SQLite from 'expo-sqlite'
 import Modal from "react-native-modal";
 import config from '../config.json'
 import dayjs from 'dayjs';
+import { downloadWords } from '../functions/downloadWords';
+import { useDispatch } from 'react-redux';
+import { setLogged } from '../store/reducer';
+import { Provinces } from '../data/provinces';
 const db=SQLite.openDatabase(config.basename)
 const screen_heigth=Dimensions.get('window').height
 const item_width=screen_heigth<690?30:40
 const LoginScreen = ({navigation,route}) => {
   const [showscanner,setShowscanner]=useState(false)
+  const provinces=Provinces
   const [downloading, setDownloading] = useState(false);
   const [logining, setLoging] = useState(false);
   const [barkodstr,setBarkodstr]=useState('');
@@ -35,17 +40,10 @@ const LoginScreen = ({navigation,route}) => {
   const [age,setAge]=useState(1);
   const net=NetInfo.useNetInfo();
   let service = new AllService();
+  const dispatch=useDispatch()
   useEffect(() => {
-    let isMounted = true;
-    service.getAimagHot().then(result=>result.json()).then((e)=>{
-      if(isMounted){
-        setPosdata(e),setPosindex(e[0].index)
-      }
-      
-    }).catch(error=>console.log('error aimag'))
-    return () => {
-      isMounted = false
-    }
+    setPosdata(provinces);
+    setPosindex(provinces[0].index);
   }, [])
  
   const handleBarCodeScanned = ({ type, data }) => {
@@ -80,66 +78,20 @@ const LoginScreen = ({navigation,route}) => {
     
 
     setLoging(true)
-        var notif='';
-        // try {
-        //   var exnotif = await registerForPushNotificationsAsync();
-        //   notif=exnotif.data
-        // } catch (error) {
-        //   alert(error);
-        // }
-        var bar=(barkodstr==''?'0':barkodstr);
-      
-       //  console.log(notif);
-        service.CheckTokenSaveUser(
-          name,phone,age,bar,notif,posindex,(Platform.OS=='android'?1:2),Appjson.expo.version).then(result=>result.text()).then(result=>{   
-            if(result=='"-2"')
-            {
-              var msg=('Бүртгэлтэй утасны дугаар байна !')  
-              Toast.show(msg,{
-                position: Toast.position.BOTTOM,
-                containerStyle:{width:280,height:80,justifyContent:'center',alignItems:'center',backgroundColor:'#de480d'},
-                textStyle: {flexWrap:'wrap'},
-                imgStyle: {},
-                mask: true,
-                maskStyle:{},                   
-              })
-              setBarkodstr('') 
-                 setLoging(false)
-            }
-          else
-            {
-                    if((result!=='"-1"') && (result!=='"0"'))        
-                      {   
-                        service.SaveAppStart(result.replace(/"/g,''),Appjson.expo.version).then(result=>result.json()).then(res=>console.log('saved ++'+res)) 
-                      
-                        downloadwords(result.replace(/"/g,''))
-                      }
-                    else {
-                      var msg=(result=='"-1"'?'Энэ календарийн qr кодыг 3 уншуулсан байна.Шинэ календарийн QR код уншуулна уу!':'Таны ашигласан код буруу байна!Кодыг календарын араас харна уу !')  
-                      Toast.show(msg,{
-                      position: Toast.position.BOTTOM,
-                      containerStyle:{width:250,height:60,justifyContent:'center',alignItems:'center',backgroundColor:'#de480d'},
-                      textStyle: {},
-                      imgStyle: {},
-                      mask: true,
-                      maskStyle:{},                   
-                    }) 
-                    setBarkodstr('') 
-                    setLoging(false)
-                    }
-               }
-              })
-          .catch((err)=>setLoging(false))
-   
+    setDownloading(true)
+    const result=await downloadWords()
+    setDownloading(false)
+    setLoging(false)
+    await SecureStore.setItemAsync('userId','86963023')
+    dispatch(setLogged(true))
   }
-  
 
   return (
     <TouchableWithoutFeedback style={{width:'100%',height:screen_heigth}} onPress={()=>Keyboard.dismiss()}>
      <ImageBackground source={require('../assets/back2.png')} imageStyle={{opacity:0.7}} resizeMode='cover'  style={styles.container}>
 
       {downloading?<View style={{flexDirection:'column',flexWrap:'wrap',width:'80%',marginHorizontal:'10%',marginTop:screen_heigth/2,justifyContent:'center',alignItems:'center'}}><ActivityIndicator size={'large'} color={'white'}/><Text style={{textAlign:'center',width:'100%',color:"white"}}>{'Смарт Календарийн цээжлүүлэх 3000 үгийн санг татаж байна.Та түр хүлээнэ үү !'}</Text></View>:
-         <View style={styles.logincontainer}>
+           <View style={styles.logincontainer}>
                
   
                
@@ -230,82 +182,11 @@ const LoginScreen = ({navigation,route}) => {
                    <Text style={{color:'white',textAlign:'center'}}>{'Version '+Appjson.expo.version}</Text>
                 </View>
          </ImageBackground> 
-         </TouchableWithoutFeedback>
+       </TouchableWithoutFeedback>
    
   );
   
- async function downloadwords(){
-  setDownloading(true)  
- 
-  service.GetAbout().then(result=>result.json()).then(async result=>{
-    try {
-      const query = `insert into companyinfo2(mail,facebookurl,address,about,trialtext,phone,date) values ('${result.mail}','${result.facebookurl}','${result.address}','${result.about}','${result.trialText}','${result.phone}','${result.updateognoo}');`;
-      db.transaction(trx => {
-          let trxQuery = trx.executeSql(
-               query
-              ,[]
-              ,(transact,resultset) => console.log(resultset)
-              ,(transact,err) => console.log('error occured ', err)
-         );
-      })
-    } catch (error)
-       {
-         console.log("about err:"+error)
-      }
-  }).catch(err=>{console.log('about err2'+err)})
-    db.transaction(async (tx)=>{
-                                 tx.executeSql('INSERT INTO info(token,phone,name,notifTime,notifTime2,endDay) VALUES ((?),(?),(?),(?),(?),(?))',[barkodstr,phone,name,'11:00','14:00',dayjs().add(13,'days').format('YYYY-MM-DD')],(tx,result)=>{                                       
-                                  },(tx,result)=>{
-                                    console.log(result);
-                               })
-     })
-    savingNews();
-                  db.transaction((tx)=>{
-                       tx.executeSql(`delete from word`,[],(tx,result)=>{ 
-                                  service.GetCalendarWords(barkodstr).then(result=>result.json()).then(result=>{
-                                    var promises = [];
-                                    console.log(result.length)
-                                    console.log(result[0])
-                                    var i=0
-                                    result.forEach(el => {
 
-                                         //var one=new Promise((resolve,reject) =>{
-                                                  db.transaction(async (tx)=>{
-                                                      tx.executeSql("INSERT INTO word VALUES ((?),(?),(?),(?),(?),(?))"
-                                                      ,[el.index,el.engword,el.monword,el.wordclass,el.date,el.audio],(tx,result)=>{
-                                                                i++ 
-                                                                if(i>=2900)
-                                                                {
-                                                                    //Notifications.cancelAllScheduledNotificationsAsync()          
-                                                                    //setDownloading(false);
-                                                                    //setLoging(false)
-                                                                    //setNotif();
-                                                                    navigation.navigate('Home',{screen:'Main',params:{id:0,page:'Main'}})
-                                                                }
-                                                      },(tx,result)=>{
-                                                         console.log('error..'+i)
-                                                      })
-                                                  })
-                                                  
-                                        })
-                                         // promises.push(one)          
-                                    }); 
-                                    //  Promise.all(promises).then(() =>{
-                                    //         console.log('all words done!')
-                                    //         Notifications.cancelAllScheduledNotificationsAsync()          
-                                    //         setDownloading(false);
-                                    //         setLoging(false)
-                                    //         setNotif();
-                                    //        navigation.navigate('Home',{screen:'Main',params:{id:0,page:'Main'}})
-                                    //  }).catch(err=>{console.log('aldaa all prom');console.log(err)});
-                                  //}).catch(err=>console.log('getting words err'+err))
-                        
-                      },(tx,result)=>{
-                    })})   
-
-     
-
-  }
   async function savingNews()
   {
     

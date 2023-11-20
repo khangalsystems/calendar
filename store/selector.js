@@ -1,6 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit";
 
-export const getMarks=(state)=>state.data.marks;
+export const getRefresh=(state)=>state.data.refresh;
+export const getLogged=(state)=>state.data.logged;
 
 
 
