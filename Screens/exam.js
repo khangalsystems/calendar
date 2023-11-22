@@ -85,7 +85,7 @@ export default function Exam({navigation,route}) {
   }
  const changedata2=(data2)=>setData2(data2)
   return (
-    <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch' style={{width:'100%',height:Dimensions.get('window').height}} >
+    <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch' style={{width:'100%',paddingTop:10,height:Dimensions.get('window').height}} >
         <View style={[styles.container,{backgroundColor:'transparent'}]}>
             <TouchableOpacity onPress={()=>{navigation.goBack()}}  style={{width:50,zIndex:2,top:10,position:'absolute',left:10, marginLeft:2,borderRadius:20,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
                <Ionicons name="ios-arrow-back" size={34} color="#1d79cf" />

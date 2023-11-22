@@ -14,6 +14,7 @@ import { daysInMonth } from '../functions/daysInMonth';
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { getRefresh } from '../store/selector';
+import AlertModal from '../components/alertModal';
 
 const db=SQLite.openDatabase(config.basename)
 LocaleConfig.locales['mn'] = {
@@ -51,9 +52,6 @@ const monthColors=[
   const [year, setYear] = useState(0)
   const [showalert, setShowalert] = useState(false)
   const [remain, setRemain] = useState(0)
-  const [middletext,setMiddletext]=useState(' ')
-  const [succtoken, setSucctoken] = useState(false)
-  const [expired, setExpired] = useState(false)
   const [minDate,setMinDate] = useState(null)
   const [maxDate,setMaxDate] = useState(null)
   const [marks,setMarks]=useState({})
@@ -97,43 +95,16 @@ const monthColors=[
   }
   useEffect(()=>{
     fillmarks(route.params.year,route.params.month,route.params.day)
+    checkalert()
   },[refresh,route.params.month,route.params.day])
   const checkalert=async ()=>
   {
-    return
-    var d = new Date()
-    var end=new Date(d.getFullYear(), d.getMonth(), d.getDate()+16);
-    var data=await SecureStore.getItemAsync('info');
-    data=JSON.parse(data)
-    var endday=Date.parse(data.endtime)
-    //console.log(data)
-    if(endday<end){
-          var today = moment();
-          var d = moment(data.endtime);
-          setRemain(today.diff(d,'days')*-1);
-          if((today.diff(d,'days')*-1)<=0)
-              {
-                setExpired(true)
-              }   
-              else  setExpired(false) 
-
-          setShowalert(true)  
-          const query = `select * from companyinfo2`;
-          db.transaction(trx => {
-              let trxQuery = trx.executeSql(
-                  query
-                  ,[]
-                  ,(transact,resultset) =>{                  
-              
-                    setMiddletext(resultset.rows._array[0].trialtext)
-                  }
-                  ,(transact,err) => console.log('error occured ', err)
-            );
-          })
-          // let service = new AllService();
-          // service.GetModalText().then(result=>result.json()).then(res=>{setMiddletext(res.trialText)})
-        } 
-        else {setShowalert(false),setSucctoken(true)}
+    const traidDate=await SecureStore.getItemAsync('trailDate')
+        if(dayjs(traidDate).diff(dayjs(),'days')<15)
+        { 
+          setShowalert(true)
+          setRemain(dayjs(traidDate).diff(dayjs(),'day'))
+        }
   }
   function NewDaySelected (day,monthvar){
     console.log('day changed:'+day,monthvar)
@@ -144,7 +115,6 @@ const monthColors=[
   };
   const gohome=()=>navigation.goBack()
   const relogin=()=>{
-    setShowalert(false);
     navigation.navigate('Barcode',{'closeit':()=>{setShowalert(true)},'succ':()=>{setShowalert(false),setSucctoken(true)} });
   }
   const openmodal=()=>{
@@ -211,14 +181,15 @@ const monthColors=[
 
    // var oldMarks={...storedMarks}
 }
+ const closeAlert=()=>setShowalert(false)
  const changeCurrentDate=(e)=>{setCurrentdate(e),console.log(e)}
   return (
-    <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch'  style={{flex:1}}>
+    <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch'  style={{flex:1,paddingTop:20}}>
        
-            <TouchableOpacity onPress={gohome}  style={{width:50,zIndex:2,top:10,position:'absolute',left:10, marginLeft:2,borderRadius:20,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
+            <TouchableOpacity onPress={gohome}  style={{width:50,zIndex:2,top:20,position:'absolute',left:10, marginLeft:2,borderRadius:20,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
                <AntDesign name={"home"}  size={34} color={"#1d79cf"} />
             </TouchableOpacity>    
-            <TouchableOpacity onPress={()=>{navigation.openDrawer()}}  style={{width:50,marginLeft:2,borderRadius:20,zIndex:2,top:10,position:'absolute',right:10,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
+            <TouchableOpacity onPress={()=>{navigation.openDrawer()}}  style={{width:50,marginLeft:2,borderRadius:20,zIndex:2,top:20,position:'absolute',right:10,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
                <Entypo name="menu" size={40} color="#1d79cf" />
             </TouchableOpacity>         
          
@@ -287,29 +258,8 @@ const monthColors=[
                               
                           </View>
                       </Modal>  
-                      <Modal visible={showalert}>
-                            <TouchableWithoutFeedback onPress={()=>{}}>
-                                <View style={styles.modalOverlay} />
-                            </TouchableWithoutFeedback>  
-                                    
-                                     <TouchableOpacity onPress={relogin} style={{marginHorizontal:30,marginBottom:5,width:Dimensions.get('window').width-100,borderRadius:10,height:50,backgroundColor:'#8fc1e3',justifyContent:'center',alignItems:'center'}}>
-                                          <Text style={{color:'white',flexWrap:"wrap"}} >{'Идэвхжүүлэх код oруулах'}</Text>
-                                      </TouchableOpacity>
-                            <ImageBackground source={require('../assets/modalimage.png')} imageStyle={{opacity:0.2}} style={styles.Modal2}>
-                                  <View style={{width:'100%',height:300}}>
-                                     
-                                    
-                                    <View style={{width:'100%',color:'white',flex:1,height:'auto'}}>
-                                          <WebView     showsHorizontalScrollIndicator={false}
-                                                    style={{backgroundColor:'rgba(52, 52, 52, 0.01)',height:320,width:'90%',marginHorizontal:'5%',flexWrap:'wrap'}} 
-                                                    source={{html:'<font color="white" size="+7" face="Verdana">'+middletext+'</font>'}} />
-                                    </View>
-                                  </View>            
-                            </ImageBackground>
-                              <TouchableOpacity onPress={()=>{if(!expired){setShowalert(false)}}}  style={{marginHorizontal:30,width:modalwidth,marginTop:5,borderRadius:10,height:50,backgroundColor:'#d12c2c',justifyContent:'center',alignItems:'center'}}>
-                                          <Text style={{color:'white',flexWrap:"wrap"}} >{expired?'Ашиглах хугацаа дууссан байна!':'Үргэлжлүүлэх ('+remain+' хоног)'}</Text>
-                              </TouchableOpacity> 
-                        </Modal> 
+                     {showalert&&<AlertModal open={showalert} close={closeAlert} remain={remain} verify={relogin}/>}
+                     
     </ImageBackground>
   );
   function getRangeDate()

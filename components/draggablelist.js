@@ -1,9 +1,9 @@
-import Modal from "react-native-modal";
+
 import React,{useState,useRef} from 'react';
-import axios from 'axios';
+import "react-native-gesture-handler";
 import { Audio } from 'expo-av';
 import { Dimensions, StyleSheet,Text, View,TouchableOpacity,ImageBackground,TouchableWithoutFeedback} from 'react-native';
-import DraggableFlatList, { NestableDraggableFlatList, NestableScrollContainer } from "react-native-draggable-flatlist";
+import DraggableFlatList from "react-native-draggable-flatlist";
 import { AntDesign } from '@expo/vector-icons'; 
 import {Paths}from '../assets/list.js';
 import Toast from 'react-native-tiny-toast'
@@ -14,7 +14,6 @@ const screen_width=Dimensions.get('window').width
 const list_item=screen_height>690?60:50
 export default function draggeble({data,data2,changedata2}) {
     const [playing, setPlaying] = useState(false)
-    const flatListRef = React.useRef()
     async function playsound(eng){
         if(!playing)
         {
@@ -109,29 +108,26 @@ export default function draggeble({data,data2,changedata2}) {
       };
   return (
       <View style={{borderRadius:20,flexDirection:'row',marginTop:10,borderRadius:20,width:'100%',height:'auto',justifyContent:'center',alignItems:'center',backgroundColor:'transparent'}}>
-               <FlatList
-                data={data}
-                scrollEnabled={false}
-                dragItemOverflow={false}
-                style={{borderRadius:20,width:screen_width/2}}
-                renderItem={({ item, index})=>renderItem2(item, index)}
-                keyExtractor={(item, index) => `${item.index}:${index}`}
-                />
-                <DraggableFlatList
-                  data={data2}
+                <FlatList
+                  data={data}
                   scrollEnabled={false}
                   dragItemOverflow={false}
-                  ref={flatListRef}
-                  alwaysBounceVertical={false}
                   style={{borderRadius:20,width:screen_width/2}}
+                  renderItem={({ item, index})=>renderItem2(item, index)}
+                  keyExtractor={(item, index) => `${item.id}:${index}`}
+                  />
+                  <DraggableFlatList
+                  data={data2}
+                  style={{width:screen_width/2}}
                   renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive)}
-                  keyExtractor={(item, index) => `${item.index}:${index}`}
+                  keyExtractor={(item, index) => `${item.id}:${index}`}
                   onDragEnd={({ data,from,to }) =>{change(from,to)}}
                   />           
         </View>
   );
   function change(from,to)
   {   
+      console.log('dragged '+from+"-"+to)
       var newData=[...data2]
       var i=newData[from];
       newData[from]=newData[to];

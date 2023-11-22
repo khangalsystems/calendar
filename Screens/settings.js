@@ -1,18 +1,13 @@
-import { StatusBar } from 'expo-status-bar';
 import React,{useState,useRef,useEffect} from 'react';
 import { StyleSheet, Text, View,Switch,Animated,ImageBackground,ActivityIndicator, Dimensions} from 'react-native';
 import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { SimpleLineIcons } from '@expo/vector-icons'; 
 import * as SecureStore from 'expo-secure-store';
 import * as SQLite from 'expo-sqlite'
-import * as FileSystem from 'expo-file-system'
 import Header from '../components/header'
-import { CommonActions   } from '@react-navigation/native';
-//import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import * as Notifications from 'expo-notifications';
-import AllService from '../services/allservice';
 import Toast from 'react-native-tiny-toast'
-import moment from "moment";
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -22,6 +17,8 @@ Notifications.setNotificationHandler({
 });
 import config from '../config.json'
 import { downloadWords } from '../functions/downloadWords';
+import dayjs from 'dayjs';
+import { downloadNews } from '../functions/downloadNews';
 const db=SQLite.openDatabase(config.basename)
 export default function Settings({route,navigation}) {
   const [notification, setNotification] = useState(false);
@@ -33,7 +30,6 @@ export default function Settings({route,navigation}) {
   }, []);
 
   const [on, setOn] = useState(true)
-  const [data, setData] = useState({})
   const [donwloading, setDownloading] = useState(false)
   const [hour, setHour] = useState('0')
   const [minute, setMinute] = useState('0')
@@ -45,18 +41,68 @@ export default function Settings({route,navigation}) {
   
 
  async function getnotinfo(){
-    var data=await SecureStore.getItemAsync('info');
-    data=JSON.parse(data);
-    setData(data)
-    setHour(data.nothour.toString())
-    setMinute(data.notminut.toString())
-    setHour2(data.nothour2.toString())
-    setMinute2(data.notminut2.toString())
+    var notif1=await SecureStore.getItemAsync('notif1');
+    var notif2=await SecureStore.getItemAsync('notif2');
+    var takeNotif=await SecureStore.getItemAsync('takeNotif');
+    setOn(takeNotif==='1')
+    setHour(String(notif1).split(':')[0])
+    setMinute(String(notif1).split(':')[1])
+    setHour2(String(notif2).split(':')[0])
+    setMinute2(String(notif2).split(':')[1])
   }
   const update=async ()=>{  
      setDownloading(true)
-     const res=await downloadWords()
+     //const res=await downloadWords()
+     const res3=await downloadNews()
      setDownloading(false)
+  }
+  const changeTakeNotif=(e)=>{
+    if(!e)
+    {
+      Notifications.cancelAllScheduledNotificationsAsync()
+    }
+    setOn(e)
+  }
+  const setNotif=async ()=>{
+    Notifications.setNotificationChannelAsync('new-emails', {
+      name: 'E-mail notifications',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: 'email-sound.wav', // <- for Android 8.0+, see channelId property below
+    });
+     Notifications.cancelAllScheduledNotificationsAsync()
+      Notifications.scheduleNotificationAsync({
+         content:await getcontent(),
+         trigger: {
+           hour:parseInt(hour),minute:parseInt(minute), repeats: true 
+        },
+      });
+       Notifications.scheduleNotificationAsync({
+         content:await getcontent(),
+         trigger: {
+            hour:parseInt(hour2),minute:parseInt(minute2), repeats: true 
+        },
+      });
+     
+      Toast.show('Амжилттай хадгалагдлаа',{
+        position: Toast.position.BOTTOM,
+        containerStyle:{width:250,height:60,justifyContent:'center',alignItems:'center',backgroundColor:'#4dd8f7'},
+        textStyle: {},
+        imgStyle: {},
+        mask: true,
+        maskStyle:{},
+    
+      })
+ 
+  }
+  const changeTime1=(e)=>{
+    setHour(e.getHours().toString())
+    setMinute(e.getMinutes().toString())
+    setShowdate1(false)
+  }
+  const changeTime2=(e)=>{
+    setHour2(e.getHours().toString())
+    setMinute2(e.getMinutes().toString())
+    setShowdate2(false)
   }
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch' style={styles.container}> 
@@ -68,9 +114,8 @@ export default function Settings({route,navigation}) {
                 <Switch
                   trackColor={{ false: "#767577", true: "#4dd8f7" }}
                   thumbColor={on ? "#6aa8e6" : "#f4f3f4"}
-                  
                   ios_backgroundColor="#6aa8e6"
-                  onValueChange={()=>{setonoff()}}
+                  onValueChange={changeTakeNotif}
                   value={on}
                 />
      </View>
@@ -119,22 +164,26 @@ export default function Settings({route,navigation}) {
                             />
                             <Text style={{marginHorizontal:5,color:on?'black':'grey'}}>{'минут'}</Text>
                       </TouchableOpacity>
-                      {/* <DateTimePickerModal
+                      <DateTimePickerModal
                           isVisible={showdate1}
                           mode='time'
-                          onConfirm={(e)=>{setHour(e.getHours().toString()),setMinute(e.getMinutes().toString())}}
+                          is24Hour={true}
+                          date={new Date(dayjs().set('hour',hour).set('minute',minute).format('YYYY-MM-DD HH:mm'))}
+                          onConfirm={changeTime1}
                           onCancel={()=>setShowdate1(false)}
                         />
                       <DateTimePickerModal
                           isVisible={showdate2}
                           mode='time'
-                          onConfirm={(e)=>{setHour2(e.getHours().toString()),setMinute2(e.getMinutes().toString())}}
+                          is24Hour={true}
+                          date={new Date(dayjs().set('hour',hour2).set('minute',minute2).format('YYYY-MM-DD HH:mm'))}
+                          onConfirm={changeTime2}
                           onCancel={()=>setShowdate2(false)}
-                        /> */}
+                        />
                 </View>
                 
       </View>
-      <TouchableOpacity onPress={()=>setNotif()} style={{justifyContent:'center',alignItems:'center',backgroundColor:'#4dd8f7',height:40,width:100,marginTop:5,borderRadius:10,marginBottom:5}}>
+      <TouchableOpacity onPress={setNotif} style={{justifyContent:'center',alignItems:'center',backgroundColor:'#4dd8f7',height:40,width:100,marginTop:5,borderRadius:10,marginBottom:5}}>
             <Text style={{color:'white'}}>{'Хадгалах'}</Text>
       </TouchableOpacity>
      </View>:null}
@@ -153,49 +202,7 @@ export default function Settings({route,navigation}) {
      </ImageBackground>
   );
 
-  async function setonoff(){
-    setOn(!on)
-    if(on)
-    {
-      Notifications.cancelAllScheduledNotificationsAsync()
-      await SecureStore.setItemAsync('info', JSON.stringify({token:data.token,userid:data.userid,endtime:data.endtime,getnot:false,age:data.age,pos:data.pos,phone:data.phone,name:data.name,nothour:parseInt(hour),notminut:parseInt(minute),nothour2:parseInt(hour2),notminut2:parseInt(minute2)}));
-
-    }
-  }
-  async function setNotif() {
-    const settings = await Notifications.getPermissionsAsync();
-    Notifications.setNotificationChannelAsync('new-emails', {
-      name: 'E-mail notifications',
-      importance: Notifications.AndroidImportance.HIGH,
-      sound: 'email-sound.wav', // <- for Android 8.0+, see channelId property below
-    });
-     Notifications.cancelAllScheduledNotificationsAsync()
-      Notifications.scheduleNotificationAsync({
-         content:await getcontent(),
-         trigger: {hour:parseInt(hour),
-         
-          minute:parseInt(minute), repeats: true },
-      });
-       Notifications.scheduleNotificationAsync({
-         content:await getcontent(),
-         trigger: {hour:parseInt(hour2),
-
-          minute:parseInt(minute2), repeats: true },
-      });
-     
-      await SecureStore.setItemAsync('info', JSON.stringify({token:data.token,userid:data.userid,endtime:data.endtime,getnot:true,age:data.age,pos:data.pos,phone:data.phone,name:data.name,nothour:parseInt(hour),notminut:parseInt(minute),nothour2:parseInt(hour2),notminut2:parseInt(minute2)}));
-
-      Toast.show('Амжилттай хадгалагдлаа',{
-        position: Toast.position.BOTTOM,
-        containerStyle:{width:250,height:60,justifyContent:'center',alignItems:'center',backgroundColor:'#4dd8f7'},
-        textStyle: {},
-        imgStyle: {},
-        mask: true,
-        maskStyle:{},
-    
-      })
- 
-  }
+  
   async function getcontent(){
     
     
@@ -216,6 +223,7 @@ const styles = StyleSheet.create({
   container: {
     height:Dimensions.get('window').height,
     width:'100%',
+    paddingTop:20,
     backgroundColor: '#dbdbdb',
     alignItems:'center'
   },

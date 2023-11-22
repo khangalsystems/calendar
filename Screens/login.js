@@ -11,6 +11,7 @@ import Toast from 'react-native-tiny-toast'
 import Appjson from '../app.json';
 import NetInfo from '@react-native-community/netinfo';
 import moment from "moment";
+import * as Device from 'expo-device';
 import * as FileSystem from 'expo-file-system'
 import * as SQLite from 'expo-sqlite'
 import Modal from "react-native-modal";
@@ -20,6 +21,7 @@ import { downloadWords } from '../functions/downloadWords';
 import { useDispatch } from 'react-redux';
 import { setLogged } from '../store/reducer';
 import { Provinces } from '../data/provinces';
+import { post } from '../api/request';
 const db=SQLite.openDatabase(config.basename)
 const screen_heigth=Dimensions.get('window').height
 const item_width=screen_heigth<690?30:40
@@ -38,10 +40,12 @@ const LoginScreen = ({navigation,route}) => {
   const [modal,setModal]=useState(false);
   const [modal2,setModal2]=useState(false);
   const [age,setAge]=useState(1);
+  const [expoToken,setExpoToken]=useState(null);
   const net=NetInfo.useNetInfo();
   let service = new AllService();
   const dispatch=useDispatch()
   useEffect(() => {
+    registerForPushNotificationsAsync().then(token => setExpoToken(token));
     setPosdata(provinces);
     setPosindex(provinces[0].index);
   }, [])
@@ -75,15 +79,32 @@ const LoginScreen = ({navigation,route}) => {
       }) 
      return;
     }
-    
+    post('/user/login',{
+         phone:phone,
+         name:name,
+         ageGroup:age,
+         district:posindex,
+         notifToken:expoToken,
+         regDate:dayjs()
+    }).then(async e=>{
+        if(e && e.success)
+        {
+              setLoging(true)
+              setDownloading(true)
+              const result=await downloadWords()
+              setDownloading(false)
+              setLoging(false)
+              await SecureStore.setItemAsync('userId',String(e.data.id))
+              await SecureStore.setItemAsync('info',JSON.stringify(e.data))
+              await SecureStore.setItemAsync('notif1','11:00')
+              await SecureStore.setItemAsync('notif2','14:00')
+              await SecureStore.setItemAsync('takeNotif','1')
+              await SecureStore.setItemAsync('trailDate',dayjs().add(14,'days').format('YYYY-MM-DD'))
+              dispatch(setLogged(true))
+        }
+    }).catch(e=>console.log(e))
 
-    setLoging(true)
-    setDownloading(true)
-    const result=await downloadWords()
-    setDownloading(false)
-    setLoging(false)
-    await SecureStore.setItemAsync('userId','86963023')
-    dispatch(setLogged(true))
+   
   }
 
   return (
@@ -289,26 +310,40 @@ const LoginScreen = ({navigation,route}) => {
         data: { screen:'Main'},
       }
     }
-//  async function  registerForPushNotificationsAsync  () {
-//     if (true) {
-//       const { status: existingStatus } = await Notifications.getPermissionsAsync()
-//       let finalStatus = existingStatus;
-//       if (existingStatus !== 'granted') {
-//         const { status } = await Notifications.getPermissionsAsync();
-//         finalStatus = status;
-//       }
-//       if (finalStatus !== 'granted') {
-       
-//         Alert.alert('Алдаа гарлаа', 'Failed to get push token for push notification!');
-//         return {data:'android device aas'};
-//       }
-//       return await Notifications.getDevicePushTokenAsync();
-//     } 
-//     else {
-//       Alert.alert('Алдаа гарлаа', 'Must use physical device for Push Notifications');
-//       return {data:'android device aas'}
-//     }
-//   };
+    async function registerForPushNotificationsAsync() {
+  let token;
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    // Learn more about projectId:
+    // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
+    token = (await Notifications.getExpoPushTokenAsync({ projectId: 'e8cdc831-6abd-4c09-ba8f-bff369aa39a5' })).data;
+    console.log(token);
+  } else {
+    alert('Must use physical device for Push Notifications');
+  }
+
+  return token;
+}
+
 };
 
 export default LoginScreen;

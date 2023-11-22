@@ -8,7 +8,7 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import * as SQLite from 'expo-sqlite'
 import config from '../config.json'
 const db=SQLite.openDatabase(config.basename)
-export default function competition(props) {
+export default function Competition(props) {
   const [data, setData] = useState([])
   useEffect(() => {
     getinfo()
@@ -36,7 +36,7 @@ export default function competition(props) {
   function renderitem(e)
   {
     return (
-      <TouchableOpacity style={styles.subcontainer} onPress={()=>props.navigation.navigate('News',{'id':e.newsid})} >  
+      <TouchableOpacity style={styles.subcontainer} onPress={()=>props.navigation.navigate('OneNews',{'id':e.newsid})} >  
         {e.topimage.length!=''? <Image source={{uri:e.topimage}} style={styles.image} />
               :null
         } 
@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
   },
   subcontainer: {
     flex: 1,
+    paddingTop:20,
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',

@@ -81,6 +81,7 @@ const styles = StyleSheet.create({
   container: {
     height:Dimensions.get('window').height,
     width:'100%',
+    paddingTop:20,
     backgroundColor: 'white',
     alignItems:'center'
   },

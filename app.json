@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "calendar",
-    "slug": "calendar",
+    "name": "Smart Calendar",
+    "slug": "smartcalendar",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/modalimage.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
@@ -18,6 +18,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.khangal.SmartCalendar",
+      "versionCode":3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
@@ -25,6 +27,13 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+
+    "extra": {
+      "eas": {
+        "projectId": "b71830b8-d7c7-4048-832b-075f0e635ec5"
+      }
+    },
+    "owner": "bathuu123"
   }
 }

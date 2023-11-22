@@ -3,35 +3,31 @@ import { StyleSheet, Text, View,Dimensions} from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/header'
+import dayjs from 'dayjs';
+import { Provinces } from '../data/provinces';
 export default function Profile(props) {
-  const [data, setData] = useState({})
+  const [data, setData] = useState(null)
   const [time, setTime] = useState('')
   useEffect(() => {
-   
-
      getinfo()
-
-    return ()=>{
-      
-    }
   },[])
   async function getinfo(){
     var data=await SecureStore.getItemAsync('info');
-    data=JSON.parse(data);
+    var date=await SecureStore.getItemAsync('trailDate');
+    var userId=await SecureStore.getItemAsync('userId');
+    var code=await SecureStore.getItemAsync('code');
 
-    var time=data.endtime.toString("YYYY-MM-DD")
-    time=time.substring(0,10);
-
-    setTime(time)
-    setData(data)
+    setTime(dayjs(date).format('YYYY-MM-DD'))
+    setData({...JSON.parse(data),userId:userId,code:code})
   }
   return (
     <View style={styles.container}>
       <Header navigation={props.navigation} url={""} title={'ХУВИЙН МЭДЭЭЛЭЛ'}/>   
       <View style={{marginTop:20}}/>
+      {data && <>
       <LinearGradient style={styles.prostart} start={{x:2,y:2}} colors={['#f7fafa', '#defafa']}>
             <Text style={styles.protitle}>{'Хэрэглэгчийн ID:'}</Text>
-            <Text style={styles.proval}>{data.userid}</Text>
+            <Text style={styles.proval}>{data.userId}</Text>
       </LinearGradient>
       <LinearGradient style={styles.pro} start={{x:2,y:2}} colors={['#b8eaf2', '#d9fcf5']}>
             <Text style={styles.protitle}>{'Нэр :'}</Text>
@@ -47,7 +43,7 @@ export default function Profile(props) {
       </LinearGradient>
       <LinearGradient style={styles.pro} start={{x:2,y:2}} colors={['#f7fafa', '#defafa']}>
             <Text style={styles.protitle}>{'Байршил :'}</Text>
-            <Text style={styles.proval}>{data.pos}</Text>
+            <Text style={styles.proval}>{Provinces.find(e=>e.index==data.district).name}</Text>
       </LinearGradient>
       <LinearGradient style={data.token==''?styles.proend:styles.pro} start={{x:2,y:2}}  colors={['#b8eaf2', '#d9fcf5']}>
             <Text style={styles.protitle}>{'Ашиглах хугацаа :'}</Text>
@@ -55,8 +51,9 @@ export default function Profile(props) {
       </LinearGradient>
       {data.token!=''?<LinearGradient style={styles.proend} start={{x:2,y:2}} colors={['#b8eaf2', '#d9fcf5']}>
             <Text style={styles.protitle}>{'Код  :'}</Text>
-            <Text style={styles.proval}>{data.token}</Text>
+            <Text style={styles.proval}>{data.code}</Text>
       </LinearGradient>:null}
+      </>}
     </View>
   );
 }
@@ -65,6 +62,7 @@ const styles = StyleSheet.create({
   container: {
     height:Dimensions.get('window').height,
     width:'100%',
+    paddingTop:20,
     backgroundColor: '#fff',
     alignItems:'center'
   },

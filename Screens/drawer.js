@@ -70,7 +70,7 @@ if(data.name!='')
 
 
 
-        <TouchableOpacity style={[styles.item,{borderBottomColor:'#1cb1ed'}]} onPress={()=>props.navigation.navigate('Competition')}>                 
+        <TouchableOpacity style={[styles.item,{borderBottomColor:'#1cb1ed'}]} onPress={()=>props.navigation.navigate('News')}>                 
                  <FontAwesome name="newspaper-o" size={25} color={'#1cb1ed'} />
                  <Text style={{color:'#1cb1ed',fontFamily:'myfont',fontSize:15,marginLeft:20}}>{'Зар, мэдээ'}</Text>
                  <MaterialIcons name={"keyboard-arrow-down"} size={34} color="#1cb1ed" style={{right:10,position:'absolute'}}/>   

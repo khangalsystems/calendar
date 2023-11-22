@@ -30,4 +30,7 @@ export default function App() {
             </Provider>
   }
   
- 
+ /// alias codes
+ /// pass:calendar123 
+ /// aliasame:smartcalendarAlias
+ /// aliaspPass:smartAlias123

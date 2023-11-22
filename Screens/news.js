@@ -15,8 +15,8 @@ export default function News({navigation,route}) {
         let trxQuery = trx.executeSql(
             query
             ,[]
-            ,(transact,resultset) =>{ 
-              
+            ,(transact,resultset) =>{    
+              console.log(resultset.rows._array[0])      
               setData(resultset.rows._array[0])
             }
             ,(transact,err) => console.log('error occured ', err)
@@ -41,27 +41,26 @@ export default function News({navigation,route}) {
     <ImageBackground source={require('../assets/back1.png')} style={styles.container}>
             <Header navigation={navigation} url={""} params={{}} title={'ДЭЛГЭРЭНГҮЙ'}/>
             <Text style={{textAlign:'center',flexWrap:'wrap',color:'black',fontWeight:'bold',fontSize:18,marginVertical:5}}>{data.title}</Text>
-            {data.topimage!=''?<Image source={{uri:data.topimage}} style={{width:'90%',marginHorizontal:'5%',borderRadius:10,height:120}} />
-            :null}
+            {data.topimage&&<Image source={{uri:data.topimage}} style={{width:'90%',marginHorizontal:'5%',borderRadius:10,height:120}} />}
             
           
-            { data.videourl.length>2?<View style={{borderRadius:30,marginTop:10,height:150,width:Dimensions.get('window').width-40,marginHorizontal:20,}}>
+            { data.videourl.length>10&&<View style={{borderRadius:30,marginTop:10,height:150,width:Dimensions.get('window').width-40,marginHorizontal:20,}}>
             
-             {error?<View  style={[styles.video,{justifyContent:'center',alignItems:'center'}]} ><Text style={{marginRight:10}}>{'Интернэтэд холбогдох боломжгүй байна!'}</Text>
-                                      <MaterialCommunityIcons name="reload" onPress={()=>setError(false)} size={24} color="black" />
-                                      </View>
-               :<WebView    
-               onError={()=>setError(true)} 
-               allowsFullscreenVideo={true} 
-               style={styles.video} 
-               source={{ uri: "https://www.youtube.com/embed/" + data.videourl }} />}
+                    {error?<View  style={[styles.video,{justifyContent:'center',alignItems:'center'}]} ><Text style={{marginRight:10}}>{'Интернэтэд холбогдох боломжгүй байна!'}</Text>
+                                              <MaterialCommunityIcons name="reload" onPress={()=>setError(false)} size={24} color="black" />
+                                              </View>
+                      :<WebView    
+                      onError={()=>setError(true)} 
+                      allowsFullscreenVideo={true} 
+                      style={styles.video} 
+                      source={{ uri: "https://www.youtube.com/embed/" + data.videourl }} />}
 
-                </View>:null}
+                        </View>}
             <WebView 
              style={{backgroundColor:'rgba(52, 52, 52, 0.01)',height:'auto',flex:1,width:Dimensions.get('window').width-40,marginHorizontal:20}} 
              source={{html:'<font color="black" size="14" face="Verdana">'+data.newstext+'</font>'}} />
-    <Text style={{textAlign:'right',flexWrap:'wrap',color:'black',fontWeight:'bold',fontSize:18,marginVertical:5}}>
-     {data.date}
+      <Text style={{textAlign:'right',flexWrap:'wrap',color:'black',fontWeight:'bold',fontSize:18,marginVertical:5}}>
+         {data.date}
      </Text>
 
    </ImageBackground>
@@ -72,6 +71,7 @@ const styles = StyleSheet.create({
   container: {
     height:Dimensions.get('window').height,
     width:'100%',
+    paddingTop:20,
     alignItems:'center',
     backgroundColor: '#fff'
   },
