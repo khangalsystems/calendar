@@ -8,12 +8,17 @@ import { AntDesign } from '@expo/vector-icons';
 import {Paths}from '../assets/list.js';
 import Toast from 'react-native-tiny-toast'
 import { FlatList } from "react-native";
+import { useEffect } from 'react';
 const screen_height=Dimensions.get('window').height
 const screen_width=Dimensions.get('window').width
 
 const list_item=screen_height>690?60:50
 export default function draggeble({data,data2,changedata2}) {
     const [playing, setPlaying] = useState(false)
+    const [loading,setLoading]=useState(true)
+    useEffect(()=>{
+           change(0,1)
+    },[])
     async function playsound(eng){
         if(!playing)
         {
@@ -114,15 +119,15 @@ export default function draggeble({data,data2,changedata2}) {
                   dragItemOverflow={false}
                   style={{borderRadius:20,width:screen_width/2}}
                   renderItem={({ item, index})=>renderItem2(item, index)}
-                  keyExtractor={(item, index) => `${item.id}:${index}`}
+                  keyExtractor={(item, index) => `${item.index}`}
                   />
                   <DraggableFlatList
                   data={data2}
-                  style={{width:screen_width/2}}
+                  style={{width:screen_width/2,height:400}}
                   renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive)}
-                  keyExtractor={(item, index) => `${item.id}:${index}`}
+                  keyExtractor={(item, index) => `${item.index}`}
                   onDragEnd={({ data,from,to }) =>{change(from,to)}}
-                  />           
+                  />    
         </View>
   );
   function change(from,to)
