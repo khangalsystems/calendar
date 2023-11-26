@@ -34,3 +34,9 @@ export default function App() {
  /// pass:calendar123 
  /// aliasame:smartcalendarAlias
  /// aliaspPass:smartAlias123
+
+
+  /// alias codes old version
+ /// pass:smart123 
+ /// aliasame:smartcalendarAlias
+ /// aliaspPass:smartAlias123

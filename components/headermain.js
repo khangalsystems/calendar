@@ -7,7 +7,7 @@ export default function headermain(props) {
 
   return ( 
        <View style={styles.header}>           
-             <Image  resizeMode={'stretch'} style={{width:150,height:50,marginLeft:5}}  source={require("../assets/02.png")} />   
+            <Text style={{fontSize:30,marginLeft:20,borderBottomWidth:1,borderBottomColor:'#669ce3',color:'#669ce3'}}>2023 он</Text>
              <TouchableOpacity onPress={()=>props.navigation.openDrawer()}  style={{width:'100%',justifyContent:'center',backgroundColor:'transparent',alignItems:'center'}}>
                 <Image   resizeMethod={'resize'} style={{width:60,height:40}}  source={require("../assets/03.png")} />
             </TouchableOpacity>     

@@ -185,14 +185,14 @@ const monthColors=[
  const changeCurrentDate=(e)=>{setCurrentdate(e),console.log(e)}
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch'  style={{flex:1,paddingTop:20}}>
-       
-            <TouchableOpacity onPress={gohome}  style={{width:50,zIndex:2,top:20,position:'absolute',left:10, marginLeft:2,borderRadius:20,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
+       <View style={{marginTop:20,flexDirection:'row',justifyContent:'space-between',marginHorizontal:10}}>
+            <TouchableOpacity onPress={gohome}  style={{width:50,marginLeft:2,borderRadius:20,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
                <AntDesign name={"home"}  size={34} color={"#1d79cf"} />
             </TouchableOpacity>    
-            <TouchableOpacity onPress={()=>{navigation.openDrawer()}}  style={{width:50,marginLeft:2,borderRadius:20,zIndex:2,top:20,position:'absolute',right:10,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
+            <TouchableOpacity onPress={()=>{navigation.openDrawer()}}  style={{width:50,marginLeft:2,borderRadius:20,backgroundColor:'transparent',flexDirection:'row',justifyContent:'center',alignItems:'center',marginTop:Platform.OS=='ios'?Constants.statusBarHeight-5:0}}>
                <Entypo name="menu" size={40} color="#1d79cf" />
             </TouchableOpacity>         
-         
+      </View>
        <View  style={styles.container}>
           {loading?<View style={{height:345,width:'100%'}}><ActivityIndicator /></View>:
                 <CalendarList
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     width:'100%',
     backgroundColor:'transparent',
     flexDirection:'column',
-    marginTop:20,
+    marginTop:0,
   },
   daysheader:{width:'14%',fontSize:12,textAlign:'center'},
   dayscontainer:{

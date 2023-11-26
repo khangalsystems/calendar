@@ -22,6 +22,7 @@ import { useDispatch } from 'react-redux';
 import { setLogged } from '../store/reducer';
 import { Provinces } from '../data/provinces';
 import { post } from '../api/request';
+import { downloadNews } from '../functions/downloadNews';
 const db=SQLite.openDatabase(config.basename)
 const screen_heigth=Dimensions.get('window').height
 const item_width=screen_heigth<690?30:40
@@ -92,6 +93,8 @@ const LoginScreen = ({navigation,route}) => {
               setLoging(true)
               setDownloading(true)
               const result=await downloadWords()
+              const result2=await downloadNews()
+
               setDownloading(false)
               setLoging(false)
               await SecureStore.setItemAsync('userId',String(e.data.id))
