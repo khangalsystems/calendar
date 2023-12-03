@@ -201,8 +201,8 @@ const LoginScreen = ({navigation,route}) => {
                           </ImageBackground>
                       </Modal>             
            </View>}
-              <View style={{marginBottom:5,bottom:0,position:'absolute',justifyContent:'center',alignItems:'center',flexDirection:'column'}}> 
-                  <Text style={{color:'white',textAlign:'center'}}>{'2021 © SmartCalendar'}</Text>
+              <View style={{marginBottom:40,bottom:0,position:'absolute',justifyContent:'center',alignItems:'center',flexDirection:'column'}}> 
+                  <Text style={{color:'white',textAlign:'center'}}>{dayjs().year()}{'© SmartCalendar'}</Text>
                    <Text style={{color:'white',textAlign:'center'}}>{'Version '+Appjson.expo.version}</Text>
                 </View>
          </ImageBackground> 

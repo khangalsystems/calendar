@@ -23,11 +23,13 @@ import { useEffect, useState } from "react";
 import config from '../config.json'
 import { setLogged } from "../store/reducer";
 import * as SQLite from 'expo-sqlite'
-import { Dimensions, View } from "react-native";
+import { ActivityIndicator, Dimensions, View } from "react-native";
 import { ImageBackground } from "react-native";
 import { execQuery } from "../functions/execQuery";
 import * as SecureStore from 'expo-secure-store'
 import dayjs from "dayjs";
+import { downloadWords } from "../functions/downloadWords";
+import { Text } from "react-native";
 const Stack1 =createStackNavigator();
 const loginStack =createStackNavigator();
 const db=SQLite.openDatabase(config.basename)
@@ -98,6 +100,8 @@ const CheckRoute=()=>{
     const logged=useSelector(state=>state.data.logged)
     const dispatch=useDispatch()
     const [loading,setLoading]=useState(true)
+    const [downLoading,setDownloading]=useState(false)
+
     useEffect(()=>{
         getData()
     },[])
@@ -110,19 +114,35 @@ const CheckRoute=()=>{
                 execQuery(tx,'CREATE TABLE IF NOT EXISTS  info(token text,phone text,name text,notifTime text,notifTime2 text,endDay text);')
                                  const userId=await SecureStore.getItemAsync('userId');
                                  const trailDate=await SecureStore.getItemAsync('trailDate');
+                                 console.log(trailDate)
                                  var expired=false
                                  if(trailDate) 
                                  {
                                   expired=dayjs(trailDate).year()!=dayjs().year()
                                  }
                                  if(userId && !expired)  dispatch(setLogged(true))
-                                 else  dispatch(setLogged(false))
+                                 else 
+                                    if(expired) 
+                                    {
+                                      setDownloading(true)
+                                      const res=await downloadWords()
+                                      setDownloading(false)
+                                      dispatch(setLogged(true))
+                                    }
+                                    else dispatch(setLogged(false))
+                                 
                                   console.log(userId)
-                                  setLoading(false)
+                                setLoading(false)
         })
     }
     if(loading)
-        return  <ImageBackground source={require('../assets/modalimage.png')}/>
+        return  <ImageBackground style={{flex:1,alignItems:'center',justifyContent:'center'}} source={require('../assets/modalimage.png')}>
+                   {downLoading&&<View>
+                        <Text style={{fontSize:20,fontWeight:'bold',color:'#fff'}}>{dayjs().year()} оны үгсийг татаж байна
+                           <ActivityIndicator/>
+                        </Text>
+                     </View>}
+          </ImageBackground>
                
     else
      if(!logged)

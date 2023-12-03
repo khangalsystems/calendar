@@ -28,7 +28,7 @@ export default function Main({route,navigation}) {
 
     return (
       <ImageBackground source={require('../assets/back1.png')} imageStyle={{opacity:1}} resizeMode='cover'  style={styles.container} >        
-       <HeaderMain navigation={navigation} />  
+         <HeaderMain navigation={navigation} />  
         <Banner navigation={navigation}/>
         <View style={{flexDirection:'row',justifyContent:'space-between',width:'94%',marginHorizontal:'3%',marginTop:5}}>
         <Text style={{color:'#1cb1ed'}}>{'Үнэлгээ :'}</Text>

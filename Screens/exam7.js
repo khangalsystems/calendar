@@ -128,9 +128,7 @@ export default function Exam7({navigation,route}) {
           if(index==2)
             setRight(false)
            else  {setLeft(true);setRight(true)}
-        }
-        
-        
+        }    
   },[pos])
   return (
     <ImageBackground source={require('../assets/back1.png')} resizeMode='stretch' style={styles.container}>
@@ -194,6 +192,7 @@ export default function Exam7({navigation,route}) {
 const styles = StyleSheet.create({
   container: {
     flex:1,
+    marginTop:10,
     backgroundColor: '#fff',
     alignItems:'flex-start',
     justifyContent:'flex-start'

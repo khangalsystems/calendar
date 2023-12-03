@@ -3,11 +3,12 @@ import React from 'react';
 import Constants from 'expo-constants';
 import { Dimensions, StyleSheet, Text, View,Image} from 'react-native';
 import {TouchableOpacity } from 'react-native-gesture-handler';
+import dayjs from 'dayjs';
 export default function headermain(props) {
 
   return ( 
        <View style={styles.header}>           
-            <Text style={{fontSize:30,marginLeft:20,borderBottomWidth:1,borderBottomColor:'#669ce3',color:'#669ce3'}}>2023 он</Text>
+            <Text style={{fontSize:30,marginLeft:20,borderBottomColor:'#669ce3',color:'#669ce3'}}>{dayjs().year()} он</Text>
              <TouchableOpacity onPress={()=>props.navigation.openDrawer()}  style={{width:'100%',justifyContent:'center',backgroundColor:'transparent',alignItems:'center'}}>
                 <Image   resizeMethod={'resize'} style={{width:60,height:40}}  source={require("../assets/03.png")} />
             </TouchableOpacity>     

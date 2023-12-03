@@ -3,7 +3,7 @@ import React,{useState,useRef} from 'react';
 import "react-native-gesture-handler";
 import { Audio } from 'expo-av';
 import { Dimensions, StyleSheet,Text, View,TouchableOpacity,ImageBackground,TouchableWithoutFeedback} from 'react-native';
-import DraggableFlatList from "react-native-draggable-flatlist";
+import DraggableFlatList, { NestableDraggableFlatList, NestableScrollContainer } from "react-native-draggable-flatlist";
 import { AntDesign } from '@expo/vector-icons'; 
 import {Paths}from '../assets/list.js';
 import Toast from 'react-native-tiny-toast'
@@ -121,13 +121,15 @@ export default function draggeble({data,data2,changedata2}) {
                   renderItem={({ item, index})=>renderItem2(item, index)}
                   keyExtractor={(item, index) => `${item.index}`}
                   />
-                  <DraggableFlatList
-                  data={data2}
-                  style={{width:screen_width/2,height:400}}
-                  renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive)}
-                  keyExtractor={(item, index) => `${item.index}`}
-                  onDragEnd={({ data,from,to }) =>{change(from,to)}}
-                  />    
+                  <NestableScrollContainer>
+                    <NestableDraggableFlatList
+                           data={data2}
+                           style={{flex:1}}
+                           renderItem={({ item, index, drag, isActive })=>renderItem(item, index, drag, isActive)}
+                           keyExtractor={(item, index) => `${item.index}`}
+                           onDragEnd={({ data,from,to }) =>{change(from,to)}}
+                    />
+                  </NestableScrollContainer>
         </View>
   );
   function change(from,to)

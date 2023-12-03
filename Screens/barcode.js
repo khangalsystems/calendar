@@ -16,21 +16,7 @@ export default function Barcode({navigation,route}) {
   const [textbarcode, setTextbarcode] = useState('')
   const [loading, setLoading] = useState(false)
   const [token,setExpoToken]=useState(null)
-  useEffect(() => {
-    (async () => {
-      registerForPushNotificationsAsync().then(token => setExpoToken(token));
-      setLoading(true)
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHeight((height-10))
-      setTimeout(() => {
-        setLoading(false)
-     }, 500);
-    })();
-    return () => {
-    
-    };
-  }, []);
-  
+
   const navigatemonth=()=>{
       var date=dayjs()
       navigation.navigate('Month',{'month':date.month()+1,'year':date.year(),'day':date.date()})
@@ -88,7 +74,7 @@ export default function Barcode({navigation,route}) {
             })
             await SecureStore.setItemAsync('trailDate',date.endOf('year').format('YYYY-MM-DD'))
             await SecureStore.setItemAsync('code',textbarcode)
-            navigation.navigate('Month',{'month':date.month()+1,'year':date.year(),'day':date.date()})
+            navigation.navigate('Main')
         }
     })
 

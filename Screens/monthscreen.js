@@ -94,6 +94,7 @@ const monthColors=[
      }, 500);
   }
   useEffect(()=>{
+    setLoading(true)
     fillmarks(route.params.year,route.params.month,route.params.day)
     checkalert()
   },[refresh,route.params.month,route.params.day])
@@ -115,7 +116,7 @@ const monthColors=[
   };
   const gohome=()=>navigation.goBack()
   const relogin=()=>{
-    navigation.navigate('Barcode',{'closeit':()=>{setShowalert(true)},'succ':()=>{setShowalert(false),setSucctoken(true)} });
+    navigation.navigate('Barcode');
   }
   const openmodal=()=>{
     setModal(true)
